@@ -3,46 +3,173 @@ using namespace lang;
 
 #include "cj.h"
 
+#include <iostream>
+using namespace std;
+
 namespace cj {
 
-	Str std_types[] = {
+	vector<Str> std_types = {
 		"void", "bool", "byte", "short", "int", "long", "ubyte", "ushort", "uint", "ulong", 
 		"float", "double", "real", "char"
 	};
+
+	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%" };
 
 	Parser::Parser(lang::Lexer *lexer) : lang::Parser(lexer) {
 
 	}
 
-	bool Parser::step() {
-		return doCodeBlock();
+	bool Parser::doMainCodeBlock() {
+		while (true) {
+			if (isSpecial(";")) continue;
+			if (isSpecial("{")) {
+				if (doCodeBlock() && isSpecial("}")) continue;
+				return false;
+			}
+			if (doMainStatement()) continue;
+			return false;
+		}
 	}
 
 	bool Parser::doCodeBlock() {
-		if (isSpecial(";")) return true;
-		if (isSpecial("{") && doCodeBlock() && isSpecial("}")) return true;
-		if (doStatement()) return true;
-
-		return false;
+		while (true) {
+			if (isSpecial(";")) continue;
+			if (isSpecial("{")) {
+				if (doCodeBlock()) continue;
+				return false;
+			}
+			if (isSpecial("}")) return true;
+			if (doStatement()) continue;
+			return false;
+		}
 	}
 
-	bool Parser::doStatement() {
-		bool iskw = false;
-		if (isKeyword()) iskw = true;
+	bool Parser::doMainStatement() {
+		if (isKeyword() && isIdentifier()) {
+			if (isSpecial("(") && doFuncDef()) return true;
+			if (doVarDef()) return true;
+			return false;
+		}
 		if (isIdentifier()) {
-			if (isSpecial("(")) return doFunc();
-			return doVar();
+			if (isSpecial("(") && doFunc()) return true;
+			if (doVar()) return true;
+			return false;
 		}
 		return false;
 	}
 
-	bool Parser::doVar() {
+	bool Parser::doStatement() {
+		if (isKeyword() && isIdentifier() && doVarDef()) return true;
+		if (isIdentifier()) {
+			if (isSpecial("(") && doFuncCall()) return true;
+			if (doVar()) return true;
+			return false;
+		}
 		return false;
 	}
 
 	bool Parser::doFunc() {
+		if (find(")")) {
+			if (isSpecial(";") && doFuncCall()) return true;
+			if (isSpecial("{") && doFuncDef()) return true;
+			return false;
+		}
+	}
+
+	bool Parser::doFuncCall() {
+		if (isSpecial(")")) return true;
+		while (true) {
+			if (doExpression()) {
+				if (isSpecial(")")) return true;
+				if (isSpecial(",")) continue;
+			}
+			return false;
+		}
+	}
+
+	bool Parser::doFuncDef() {
+		if (!doFuncDefParams()) return false;
+		if (!doFuncDefBody()) return false;
+
+		return true;
+	}
+
+	bool Parser::doFuncDefParams() {
+		if (isSpecial(")")) return true;
+		while (true) {
+			isKeyword();
+			if (isIdentifier()) {
+				if (isSpecial(")")) return true;
+				if (isSpecial(",")) continue;
+			}
+		}
+	}
+
+	bool Parser::doFuncDefBody() {
+		return doCodeBlock();
+	}
+
+	bool Parser::doVar() {
+		if (doVarDef()) {
+			doExpression();
+			return true;
+		}
+		if (doVarUse()) {
+			doExpression();
+			return true;
+		}
 		return false;
 	}
+
+	bool Parser::doVarDef() {
+		return true;
+	}
+
+	bool Parser::doVarUse() {
+		return true;
+	}
+
+	bool Parser::doExpression() {
+		doUnatyOperator();
+		while (true) {
+			if (isSpecial("(")) {
+				if (!doExpression()) return false;
+				if (isSpecial(")")) return false;
+			}
+			else if (isNumber()) {
+			}
+			else if (isIdentifier()) {
+				if (isSpecial("(")) {
+					if (!doFuncCall()) return false;
+				}
+				else {
+					if (!doVar()) return false;
+				}
+				return false;
+			}
+			else return false;
+
+			if (doBinatyOperator()) continue;
+			break;
+		}
+		return true;
+	}
+
+	bool Parser::doUnatyOperator() {
+		if (isSpecial(ari_opers[1])) return true;
+		if (isSpecial(ari_opers[2])) return true;
+		return false;
+	}
+
+	bool Parser::doBinatyOperator() {
+		int count = ari_opers.size();
+		for (int i = 0; i < count; i++) {
+			if (isSpecial(ari_opers[i])) return true;
+		}
+		return false;
+	}
+
+
 
 	bool Parser::isIdentifier() {
 		savePosition();
@@ -59,7 +186,7 @@ namespace cj {
 		savePosition();
 		token = getToken();
 		if (token.type == ltIdentifier) {
-			int count = sizeof(std_types);
+			int count = std_types.size();
 			for (int i = 0; i < count; i++) {
 				if (std_types[i] == token.lexeme) return true;
 			}
@@ -102,6 +229,14 @@ namespace cj {
 
 		rollback();
 		return false;
+	}
+
+	bool Parser::find(Str s) {
+		while (true) {
+			Token token = getToken();
+			if (token.lexeme == s) return true;
+			if (token.type == ltEnd) return false;
+		}
 	}
 
 }

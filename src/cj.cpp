@@ -32,5 +32,8 @@ int main(int argc, char* argv[])
 
 	getchar();
 
+	int a = +1;
+	-(a);
+
 	return 0;
 }
