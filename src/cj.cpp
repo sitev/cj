@@ -2,7 +2,6 @@
 using namespace core;
 
 #include "lang.h"
-using namespace lang;
 
 #include "cj.h"
 using namespace cj;
@@ -24,10 +23,15 @@ int main(int argc, char* argv[])
 
 	cout << s.to_string() << endl;
 
-	Lexer *lexer = new Lexer();
+	lang::Lexer *lexer = new lang::Lexer();
 	//s = lexer->run(s);
 	cj::Parser *parser = new cj::Parser(lexer);
 	s = parser->run(s);
+
+	cout << "---------- out ---------" << endl;
+	cj::Generator *generator = new cj::Generator(parser);
+	s = generator->run();
+
 	cout << s.to_string() << endl;
 
 	getchar();
