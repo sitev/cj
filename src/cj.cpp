@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 	s = parser->run(s);
 
 	cout << "---------- out ---------" << endl;
-	cj::Generator *generator = new cj::Generator(parser);
+	Generator *generator = new Generator(parser);
 	s = generator->run();
 
 	cout << s.to_string() << endl;
