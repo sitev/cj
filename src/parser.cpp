@@ -48,23 +48,31 @@ namespace cj {
 	}
 
 	bool Parser::doMainStatement(Node *parent) {
-		if (isKeyword() && isIdentifier()) {
-			if (isSpecial("(") && doFuncDef(parent)) return true;
-			if (doVarDef(parent)) return true;
-			return false;
+		if (isKeyword()) {
+			if (!isIdentifier()) return false;
+			if (isSpecial("(")) {
+				return doFuncDef(parent);
+			}
+			return doVarDef(parent);
 		}
 		if (isIdentifier()) {
-			if (isSpecial("(") && doFunc(parent)) return true;
-			if (doVar(parent)) return true;
-			return false;
+			if (isSpecial("(")) {
+				return doFunc(parent);
+			}
+			return doVar(parent);
 		}
 		return false;
 	}
 
 	bool Parser::doStatement(Node *parent) {
-		if (isKeyword() && isIdentifier() && doVarDef(parent)) return true;
+		if (isKeyword()) {
+			if (!isIdentifier()) return false;
+			return doVarDef(parent);
+		}
 		if (isIdentifier()) {
-			if (isSpecial("(") && doFuncCall(parent)) return true;
+			if (isSpecial("(")) {
+				return doFuncCall(parent);
+			}
 			if (doVar(parent)) return true;
 			return false;
 		}
@@ -72,31 +80,59 @@ namespace cj {
 	}
 
 	bool Parser::doFunc(Node *parent) {
+		int pos;
+		savePosition(pos);
 		if (find(")")) {
-			if (isSpecial(";") && doFuncCall(parent)) return true;
-			if (isSpecial("{") && doFuncDef(parent)) return true;
-			return false;
-		}
-	}
-
-	bool Parser::doFuncCall(Node *parent) {
-		Node *node = new Func();
-		addNode(parent, node);
-		if (isSpecial(")")) return true;
-		while (true) {
-			if (doExpression(node)) {
-				if (isSpecial(")")) return true;
-				if (isSpecial(",")) continue;
+			if (isSpecial(";")) {
+				rollback(pos);
+				return doFuncCall(parent);
+			}
+			if (isSpecial("{")) {
+				rollback(pos);
+				return doFuncDef(parent);
 			}
 			return false;
 		}
 	}
 
+	bool Parser::doFuncCall(Node *parent) {
+		if (parent == nullptr || parent->nodeType != ntExpression) {
+			decPosition();
+			decPosition();
+			doExpression(parent);
+		}
+		else {
+			FuncDef *fd = findFuncDef(parent->parent, identifier);
+			if (!fd) {
+				FuncDef *fd = new FuncDef();
+				fd->name = identifier;
+				fd->type = "auto";
+				addNode(parent->parent, fd);
+			}
+
+			Func *func = new Func();
+			func->def = fd;
+			addNode(parent, func);
+			if (isSpecial(")")) return true;
+			while (true) {
+				if (doExpression(func)) {
+					if (isSpecial(")")) return true;
+					if (isSpecial(",")) continue;
+				}
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool Parser::doFuncDef(Node *parent) {
-		FuncDef *node = new FuncDef();
-		addNode(parent, node);
-		if (!doFuncDefParams(node)) return false;
-		if (!doFuncDefBody(node)) return false;
+		FuncDef *fd = new FuncDef();
+		fd->name = identifier;
+		if (keyword == "") fd->type = "auto";
+		else fd->type = keyword;
+		addNode(parent, fd);
+		if (!doFuncDefParams(fd)) return false;
+		if (!doFuncDefBody(fd)) return false;
 
 		return true;
 	}
@@ -119,20 +155,12 @@ namespace cj {
 	}
 
 	bool Parser::doFuncDefBody(Node *parent) {
-		Node *node = new CodeBlock();
-		addNode(parent, node);
-		return doCodeBlock(node);
+		if (!isSpecial("{")) return false;
+		cout << "func_def_body {";
+		//Node *node = new CodeBlock();
+		//addNode(parent, node);
+		return doCodeBlock(parent);
 	}
-
-	//bool Parser::doVar(Node *parent) {
-	//	if (doVarDef(parent)) {
-	//		return true;
-	//	}
-	//	if (doVarUse(parent)) {
-	//		return true;
-	//	}
-	//	return false;
-	//}
 
 	bool Parser::doVarDef(Node *parent) {
 		if (findVarDef(parent, identifier)) return false;
@@ -346,9 +374,33 @@ namespace cj {
 			Node *node = parent->nodes[i];
 			if (node->nodeType == ntVarDef) {
 				VarDef *vd = (VarDef*)node;
-				if (vd->name == var) return nullptr;
+				if (vd->name == var) return vd;
 			}
 		}
+		return nullptr;
+	}
+
+	FuncDef* Parser::findFuncDef(Node *parent, Str func) {
+		if (parent == nullptr) {
+			int count = nodes.size();
+			for (int i = 0; i < count; i++) {
+				Node *node = nodes[i];
+				if (node->nodeType == ntFuncDef) {
+					FuncDef *fd = (FuncDef*)node;
+					if (fd->name == func) return fd;
+				}
+			}
+			return nullptr;
+		}
+		int count = parent->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *node = parent->nodes[i];
+			if (node->nodeType == ntFuncDef) {
+				FuncDef *fd = (FuncDef*)node;
+				if (fd->name == func) return fd;
+			}
+		}
+		return nullptr;
 	}
 
 }

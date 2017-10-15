@@ -43,6 +43,7 @@ namespace cj {
 		lang::Token token;
 		virtual void addNode(Node *parent, Node *node);
 		virtual VarDef* findVarDef(Node *parent, Str var);
+		virtual FuncDef* findFuncDef(Node *parent, Str func);
 	};
 
 }
