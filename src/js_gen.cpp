@@ -41,7 +41,7 @@ namespace cj {
 		int count = fd->params.size();
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
-			s += (Str)"var " + fdp->name;
+			s += fdp->name;
 			if (i + 1 != count) s += ", ";
 		}
 
