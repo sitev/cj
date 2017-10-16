@@ -29,15 +29,19 @@ int main(int argc, char* argv[])
 	s = parser->run(s);
 
 	cout << "---------- out ---------" << endl;
-	Generator *generator = new Generator(parser);
+	Generator *generator = new JsGen(parser);
 	s = generator->run();
 
 	cout << s.to_string() << endl;
 
-	getchar();
+	//getchar();
 
-	int a = +1;
-	-(a);
+	int pos = fn.rfind(".");
+	fn = fn.substr(0, pos + 1) + "js";
 
+	File fout(fn.to_string(), "wb");
+	fout.write((void*)s.to_string().c_str(), s.length());
+	//fout.save();
+	
 	return 0;
 }

@@ -1,4 +1,4 @@
 #pragma once
 
 #include "parser.h"
-#include "generator.h"
+#include "js_gen.h"

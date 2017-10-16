@@ -156,7 +156,7 @@ namespace cj {
 
 	bool Parser::doFuncDefBody(Node *parent) {
 		if (!isSpecial("{")) return false;
-		cout << "func_def_body {";
+		//cout << "func_def_body {";
 		//Node *node = new CodeBlock();
 		//addNode(parent, node);
 		return doCodeBlock(parent);
