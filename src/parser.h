@@ -24,6 +24,13 @@ namespace cj {
 		virtual bool doVar(Node *parent);
 
 		virtual bool doNumber(Node *parent);
+		virtual bool doOperator(Node *parent);
+		virtual bool doOperatorIf(Node *parent);
+		virtual bool doOperatorFor(Node *parent);
+		virtual bool doOperatorWhile(Node *parent);
+		virtual bool doOperatorReturn(Node *parent);
+
+
 
 
 		virtual bool doExpression(Node *node, bool isCreateExpressionNode = true);
@@ -32,13 +39,18 @@ namespace cj {
 
 		virtual bool isIdentifier();
 		virtual bool isStdType();
-		virtual bool isKeyword();
+		virtual bool isOperator();
+		virtual bool isOperator(Str s);
+		//virtual bool isKeyword();
 		virtual bool isNumber();
+		virtual bool isLexeme(Str s);
 		virtual bool isSpecial(Str s);
 		virtual bool find(Str s);
+
+		/*virtual bool isEof();*/
 		
 	protected:
-		Str std_type, keyword, identifier;
+		Str std_type, oper, identifier;
 		int number;
 		lang::Token token;
 		virtual void addNode(Node *parent, Node *node);

@@ -14,7 +14,12 @@ namespace cj {
 		virtual Str genFuncDef(Node *node);
 		virtual Str genFunc(Node *node);
 		virtual Str genOperator(Node *node);
-		virtual Str genExpression(Node *node);
+		virtual Str genOperatorIf(Operator *oper);
+		virtual Str genOperatorFor(Operator *oper);
+		virtual Str genOperatorWhile(Operator *oper);
+		virtual Str genOperatorReturn(Operator *oper);
+		virtual Str genExpOper(Node *node);
+		virtual Str genExpression(Node *node, bool isExpNotCR = false);
 		virtual Str genCodeBlock(Node *node);
 	};
 

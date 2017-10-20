@@ -65,11 +65,57 @@ namespace cj {
 
 	Str JsGen::genOperator(Node *node) {
 		Operator *oper = (Operator*)node;
+		if (oper->name == "if") return genOperatorIf(oper);
+		else if (oper->name == "for") return genOperatorFor(oper);
+		else if (oper->name == "while") return genOperatorWhile(oper);
+		else if (oper->name == "return") return genOperatorReturn(oper);
+		return "";
+	}
+
+	Str JsGen::genOperatorIf(Operator *oper) {
+		Str s = oper->name + " (";
+		int count = oper->nodes.size();
+		if (count > 0) s += generate(oper->nodes[0]);
+		s += ") ";
+		if (count > 1) s += generate(oper->nodes[1]); else s += ";\r\n";
+		if (count > 2) s += (Str)"else " + generate(oper->nodes[2]);
+		return s;
+	}
+
+	Str JsGen::genOperatorFor(Operator *oper) {
+		Str s = oper->name + " (";
+		int count = oper->nodes.size();
+		if (count > 0) s += generate(oper->nodes[0], true);
+		if (count > 1) s += generate(oper->nodes[1], true);
+		if (count > 2) s += generate(oper->nodes[2]);
+		s += ") ";
+		if (count > 3) s += generate(oper->nodes[3]); else s += ";\r\n";
+		return s;
+	}
+
+	Str JsGen::genOperatorWhile(Operator *oper) {
+		Str s = oper->name + " (";
+		int count = oper->nodes.size();
+		if (count > 0) s += generate(oper->nodes[0]);
+		s += ") ";
+		if (count > 1) s += generate(oper->nodes[1]); else s += ";\r\n";
+		return s;
+	}
+
+	Str JsGen::genOperatorReturn(Operator *oper) {
+		Str s = oper->name + " ";
+		int count = oper->nodes.size();
+		if (count > 0) s += generate(oper->nodes[0]); else s += ";\r\n";
+		return s;
+	}
+
+	Str JsGen::genExpOper(Node *node) {
+		Operator *oper = (Operator*)node;
 		Str s = (Str)" " + oper->name + " ";
 		return s;
 	}
 
-	Str JsGen::genExpression(Node *node) {
+	Str JsGen::genExpression(Node *node, bool isExpNotCR) {
 		Expression *exp = (Expression*)node;
 
 		Str s = "";
@@ -79,7 +125,10 @@ namespace cj {
 			s += generate(nd);
 		}
 
-		if (count != 0) s += ";\r\n";
+		if (exp->isTZ) {
+			s += ";";
+			if (!isExpNotCR) s += "\r\n";
+		}
 		return s;
 	}
 
@@ -89,7 +138,8 @@ namespace cj {
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
-			s += getTab(1) + generate(nd);
+			Str s2 = generate(nd);
+			if (s2 != "") s += getTab(1) + s2;
 		}
 
 		s += "}\r\n";
