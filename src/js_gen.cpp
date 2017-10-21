@@ -23,13 +23,25 @@ namespace cj {
 	Str JsGen::genVarDef(Node *node) {
 		Str s = "var ";
 		VarDef *vd = (VarDef*)node;
-		s += vd->name + ";\r\n";
+		s += vd->name;
+		if (vd->isArray) s += " = []";
+		s += ";\r\n";
 		return s;
 	}
 
 	Str JsGen::genVar(Node *node) {
 		Var *var = (Var*)node;
 		Str s = var->def->name;
+
+		if (var->def->isArray) {
+			s += "[";
+			int count = var->nodes.size();
+			for (int i = 0; i < count; i++) {
+				Node *nd = var->nodes[i];
+				s += generate(nd);
+			}
+			s += "]";
+		}
 		return s;
 	}
 

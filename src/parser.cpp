@@ -173,7 +173,11 @@ namespace cj {
 		if (std_type == "") vd->type = "auto"; else vd->type = std_type;
 		addNode(parent, vd);
 
-		if (isSpecial("=")) {
+		if (isSpecial("[")) {
+			if (!isSpecial("]")) return false;
+			vd->isArray = true;
+		}
+		else if (isSpecial("=")) {
 			Expression *exp = new Expression();
 			addNode(parent, exp);
 
@@ -199,7 +203,7 @@ namespace cj {
 		else {
 			VarDef *vd = findVarDef(parent->parent, identifier);
 			if (!vd) {
-				VarDef *vd = new VarDef();
+				vd = new VarDef();
 				vd->name = identifier;
 				vd->type = "auto";
 				addNode(parent->parent, vd);
@@ -208,6 +212,13 @@ namespace cj {
 			Var *node = new Var();
 			node->def = vd;
 			addNode(parent, node);
+
+			if (vd->isArray) {
+				if (isSpecial("[")) {
+					if (!doExpression(node)) return false;
+					if (!isSpecial("]")) return false;
+				}
+			}
 		}
 		return true;
 	}
