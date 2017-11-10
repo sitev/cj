@@ -55,6 +55,7 @@ namespace cj {
 		
 		if (isIdentifier()) {
 			if (isSpecial("(")) return doFuncDef(parent);
+			if (isSpecial("{")) return doClass(parent);
 			if (doVarDef(parent)) return true;
 			decPosition();
 			return doExpression(parent);
@@ -286,6 +287,23 @@ namespace cj {
 			if (doExpression(oper)) return true;
 		}
 		return isSpecial(";");
+	}
+
+	bool Parser::doClass(Node *parent) {
+		Class *cls = new Class();
+		cls->name = identifier;
+		addNode(parent, cls);
+		if (isSpecial("}")) return true;
+		if (isStdType()) {
+			if (!isIdentifier()) return false;
+			if (isSpecial("(")) return doFuncDef(cls);
+			return doVarDef(cls);
+		}
+		if (isIdentifier()) {
+			if (isSpecial("(")) return doFuncDef(cls);
+			return doVarDef(cls);
+		}
+		return false;
 	}
 
 	bool Parser::doExpression(Node *node, bool isCreateExpressionNode) {

@@ -29,7 +29,8 @@ namespace cj {
 		virtual bool doOperatorFor(Node *parent);
 		virtual bool doOperatorWhile(Node *parent);
 		virtual bool doOperatorReturn(Node *parent);
-
+		
+		virtual bool doClass(Node *parent);
 
 
 

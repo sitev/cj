@@ -12,7 +12,9 @@ using namespace cj;
 
 int main(int argc, char* argv[])
 {
-	cout << "Cj compiler 0.1" << endl;
+	int a(1);
+
+	cout << "Cj 0.3" << endl;
 	if (argc < 2) {
 		cout << "Error. Missing source file. Example:" << endl;
 		cout << "cj source.cj" << endl;

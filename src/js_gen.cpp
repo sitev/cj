@@ -157,4 +157,20 @@ namespace cj {
 		s += "}\r\n";
 		return s;
 	}
+
+	Str JsGen::genClass(Node *node) {
+		Str s = "/*class ";
+		Class *cls = (Class*)node;
+		s += cls->name + "\r\n";
+
+		int count = node->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *nd = node->nodes[i];
+			Str s2 = generate(nd);
+			s = s + s2;
+		}
+
+		s += "*/\r\n";
+		return s;
+	}
 }

@@ -21,6 +21,7 @@ namespace cj {
 		virtual Str genExpOper(Node *node);
 		virtual Str genExpression(Node *node, bool isExpNotCR = false);
 		virtual Str genCodeBlock(Node *node);
+		virtual Str genClass(Node *node);
 	};
 
 }
