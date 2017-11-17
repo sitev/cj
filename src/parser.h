@@ -4,6 +4,8 @@ using namespace lang;
 
 namespace cj {
 
+	enum ExpType {etNone, etInteger, etString};
+
 	class Parser : public lang::Parser {
 	public:
 		Parser(Lexer *lexer);
@@ -19,11 +21,13 @@ namespace cj {
 		virtual bool doFuncDefParams(FuncDef *fd);
 		virtual bool doFuncDefBody(Node *parent);
 
-//		virtual bool doVar(Node *parent);
 		virtual bool doVarDef(Node *parent);
 		virtual bool doVar(Node *parent);
+		virtual bool doVarInit(Node *parent, VarDef *vd);
 
 		virtual bool doNumber(Node *parent);
+		virtual bool doString(Node *parent);
+
 		virtual bool doOperator(Node *parent);
 		virtual bool doOperatorIf(Node *parent);
 		virtual bool doOperatorFor(Node *parent);
@@ -31,14 +35,16 @@ namespace cj {
 		virtual bool doOperatorReturn(Node *parent);
 		
 		virtual bool doClass(Node *parent);
+		virtual bool doConstruct(Node *parent);
 
 
 
 		virtual bool doExpression(Node *node, bool isCreateExpressionNode = true);
-		virtual bool doUnatyOperator(Node *parent);
-		virtual bool doBinatyOperator(Node *parent);
+		virtual bool doUnaryOperator(Node *parent);
+		virtual bool doBinaryOperator(Node *parent);
 
 		virtual bool isIdentifier();
+		virtual bool isString();
 		virtual bool isStdType();
 		virtual bool isOperator();
 		virtual bool isOperator(Str s);
@@ -51,12 +57,13 @@ namespace cj {
 		/*virtual bool isEof();*/
 		
 	protected:
-		Str std_type, oper, identifier;
+		Str std_type, oper, identifier, cur_string;
 		int number;
 		lang::Token token;
 		virtual void addNode(Node *parent, Node *node);
 		virtual VarDef* findVarDef(Node *parent, Str var);
 		virtual FuncDef* findFuncDef(Node *parent, Str func);
+		virtual Class* findClass(Node *parent, Str clss_nm);
 	};
 
 }

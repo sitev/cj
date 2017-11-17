@@ -10,7 +10,7 @@ namespace cj {
 
 	vector<Str> std_types = {
 		"auto", "void", "bool", "byte", "short", "int", "long", "ubyte", "ushort", "uint", "ulong",
-		"float", "double", "real", "char"
+		"float", "double", "real", "char", "str", "string", "ustring"
 	};
 
 	vector<Str> operators = { "if", "for", "while", "return"};
@@ -216,7 +216,7 @@ namespace cj {
 
 			if (vd->isArray) {
 				if (isSpecial("[")) {
-					if (!doExpression(node)) return false;
+					if (!doExpression(parent)) return false;
 					if (!isSpecial("]")) return false;
 				}
 			}
@@ -224,9 +224,69 @@ namespace cj {
 		return true;
 	}
 
+	bool Parser::doConstruct(Node *parent) {
+		if (!parent) return false; //??? непонятно что с этим делат в будущем)
+
+		Class *clss = findClass(parent, identifier);
+		if (!clss) return false;
+
+		Construct *con = new Construct();
+		con->clss = clss;
+		addNode(parent, con);
+
+		if (isSpecial("}")) return true;
+		while (true) {
+			if (!isIdentifier()) return false;
+			if (!isSpecial(":")) return false;
+			//1. Найти в классе clss свойство identifier
+			VarDef *vd = clss->findVar(identifier);
+
+			//2. Определить его тип/класс
+			// if (vd->clss) vd->clss
+			// else vd->type;
+
+			//3. Создать переменную
+			Var *var = new Var();
+			var->def = vd;
+			addNode(con, var);
+
+			//4. Вызвать функцию обработки инициализации свойства identifier
+			bool flag = doVarInit(var, vd);
+			int count = var->nodes.size();
+			if (!flag) return false;
+			if (isSpecial(",")) continue;
+			if (isSpecial("}")) return true;
+		}
+		return false;
+	}
+
+	bool Parser::doVarInit(Node *parent, VarDef *vd) {
+		//Array of string
+		if (vd->type == "string" && vd->isArray) {
+			if (!isSpecial("[")) return false;
+			if (isSpecial("]")) return true;
+			while (true) {
+				if (!doExpression(parent)) return false;
+				if (isSpecial(",")) continue;
+				return isSpecial("]");
+			}
+		}
+		else if (vd->type == "int") {
+			return doExpression(parent);
+		}
+		return false;
+	}
+
 	bool Parser::doNumber(Node *parent) {
 		Number *node = new Number();
 		node->value = number;
+		addNode(parent, node);
+		return true;
+	}
+
+	bool Parser::doString(Node *parent) {
+		StringNode *node = new StringNode();
+		node->value = cur_string;
 		addNode(parent, node);
 		return true;
 	}
@@ -290,41 +350,72 @@ namespace cj {
 	}
 
 	bool Parser::doClass(Node *parent) {
-		Class *cls = new Class();
-		cls->name = identifier;
-		addNode(parent, cls);
-		if (isSpecial("}")) return true;
-		if (isStdType()) {
-			if (!isIdentifier()) return false;
-			if (isSpecial("(")) return doFuncDef(cls);
-			return doVarDef(cls);
-		}
-		if (isIdentifier()) {
-			if (isSpecial("(")) return doFuncDef(cls);
-			return doVarDef(cls);
+		Class *clss = new Class();
+		clss->name = identifier;
+		addNode(parent, clss);
+		while (true) {
+			if (isSpecial("}")) return true;
+			if (isStdType()) {
+				if (!isIdentifier()) return false;
+				if (isSpecial("(")) {
+					bool flag = doFuncDef(clss);
+					if (!flag) return false;
+				}
+				else {
+					bool flag = doVarDef(clss);
+					if (!flag) return false;
+				}
+			}
+			else {
+				if (!isIdentifier()) return false;
+				if (isSpecial("(")) {
+					bool flag = doFuncDef(clss);
+					if (!flag) return false;
+				}
+				else {
+					bool flag = doVarDef(clss);
+					if (!flag) return false;
+				}
+			}
 		}
 		return false;
 	}
 
+
+
 	bool Parser::doExpression(Node *node, bool isCreateExpressionNode) {
+		ExpType expType = etNone;
+
 		Expression *expression = (Expression*)node;
 		if (isCreateExpressionNode) {
 			expression = new Expression();
 			addNode(node, expression);
 		}
 
-		doUnatyOperator(expression);
+		bool flag = doUnaryOperator(expression);
+		if (expType == etNone && flag) expType = etInteger;
+
 		while (true) {
 			if (isSpecial("(")) {
+				if (expType == etString) return false;
+				if (expType == etNone) expType = etInteger;
 				if (!doExpression(expression, false)) return false;
 				if (isSpecial(")")) return false;
 			}
 			else if (isNumber()) {
+				if (expType == etNone) expType = etInteger;
 				doNumber(expression);
+			}
+			else if (isString()) {
+				expType = etString;
+				doString(expression);
 			}
 			else if (isIdentifier()) {
 				if (isSpecial("(")) {
 					if (!doFuncCall(expression)) return false;
+				}
+				else if (isSpecial("{")) {
+					if (!doConstruct(expression)) return false;
 				}
 				else {
 					if (!doVar(expression)) return false;
@@ -332,14 +423,14 @@ namespace cj {
 			}
 			else return false;
 
-			if (doBinatyOperator(expression)) continue;
+			if (doBinaryOperator(expression)) continue;
 			if (isSpecial(";")) expression->isTZ = true;
 			break;
 		}
 		return true;
 	}
 
-	bool Parser::doUnatyOperator(Node *parent) {
+	bool Parser::doUnaryOperator(Node *parent) {
 		bool flag = false;
 		if (isSpecial(ari_opers[1])) flag = true;
 		else if (isSpecial(ari_opers[2])) flag = true;
@@ -354,7 +445,7 @@ namespace cj {
 		return false;
 	}
 
-	bool Parser::doBinatyOperator(Node *parent) {
+	bool Parser::doBinaryOperator(Node *parent) {
 		int count = ari_opers.size();
 		for (int i = 0; i < count; i++) {
 			if (isSpecial(ari_opers[i])) {
@@ -376,6 +467,18 @@ namespace cj {
 		token = getToken();
 		if (token.type == ltIdentifier) {
 			identifier = token.lexeme;
+			return true;
+		}
+
+		rollback();
+		return false;
+	}
+
+	bool Parser::isString() {
+		savePosition();
+		token = getToken();
+		if (token.type == ltString) {
+			cur_string = token.lexeme;
 			return true;
 		}
 
@@ -530,6 +633,29 @@ namespace cj {
 			}
 		}
 		return nullptr;
+	}
+
+	Class* Parser::findClass(Node *parent, Str cls_nm) {
+		if (parent == nullptr) {
+			int count = nodes.size();
+			for (int i = 0; i < count; i++) {
+				Node *node = nodes[i];
+				if (node->nodeType == ntClass) {
+					Class *clss = (Class*)node;
+					if (clss->name == cls_nm) return clss;
+				}
+			}
+			return nullptr;
+		}
+		int count = parent->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *node = parent->nodes[i];
+			if (node->nodeType == ntClass) {
+				Class *clss = (Class*)node;
+				if (clss->name == cls_nm) return clss;
+			}
+		}
+		return findClass(parent->parent, cls_nm);
 	}
 
 }
