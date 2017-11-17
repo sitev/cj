@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\examples\7_project_file\project_file.cpp" />
     <ClCompile Include="..\..\src\cj.cpp" />
     <ClCompile Include="..\..\src\cpp_gen.cpp" />
     <ClCompile Include="..\..\src\js_gen.cpp" />
