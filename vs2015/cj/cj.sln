@@ -16,6 +16,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lang", "..\..\..\lang\vs201
 		{95C32FB2-32DC-45FF-B513-7E117514D8CA} = {95C32FB2-32DC-45FF-B513-7E117514D8CA}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "8_desktop_console", "..\..\examples\8_desktop_console\8_desktop_console.vcxproj", "{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -48,6 +50,14 @@ Global
 		{88503E1B-AF2E-4510-8FCC-705D1CD1B32F}.Release|x64.Build.0 = Release|x64
 		{88503E1B-AF2E-4510-8FCC-705D1CD1B32F}.Release|x86.ActiveCfg = Release|Win32
 		{88503E1B-AF2E-4510-8FCC-705D1CD1B32F}.Release|x86.Build.0 = Release|Win32
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Debug|x64.ActiveCfg = Debug|x64
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Debug|x64.Build.0 = Debug|x64
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Debug|x86.ActiveCfg = Debug|Win32
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Debug|x86.Build.0 = Debug|Win32
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Release|x64.ActiveCfg = Release|x64
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Release|x64.Build.0 = Release|x64
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Release|x86.ActiveCfg = Release|Win32
+		{BDD106E5-2B12-4611-9AC0-78D4A6FB3ACA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

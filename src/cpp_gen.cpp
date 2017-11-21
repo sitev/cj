@@ -84,6 +84,8 @@ namespace cj {
 
 	Str CppGen::genFuncDef(Node *node) {
 		FuncDef *fd = (FuncDef*)node;
+		if (fd->isUse) return "";
+
 		Str s = fd->type + " ";
 		s += fd->name + "(";
 
@@ -107,7 +109,15 @@ namespace cj {
 
 	Str CppGen::genFunc(Node *node) {
 		Func *func = (Func*)node;
-		Str s = func->def->name + "()";
+		Str s = func->def->name + "(";
+
+		int count = func->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *nd = func->nodes[i];
+			s += generate(nd);
+		}
+
+		s += ")";
 
 		return s;
 	}

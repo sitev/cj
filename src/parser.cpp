@@ -13,7 +13,7 @@ namespace cj {
 		"float", "double", "real", "char", "str", "string", "ustring"
 	};
 
-	vector<Str> operators = { "if", "for", "while", "return"};
+	vector<Str> operators = { "if", "for", "while", "return", "use"};
 
 	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%" };
 
@@ -54,7 +54,7 @@ namespace cj {
 		}
 		
 		if (isIdentifier()) {
-			if (isSpecial("(")) return doFuncDef(parent);
+			if (isSpecial("(")) return doFunc(parent);
 			if (isSpecial("{")) return doClass(parent);
 			if (doVarDef(parent)) return true;
 			decPosition();
@@ -133,13 +133,18 @@ namespace cj {
 		return true;
 	}
 
-	bool Parser::doFuncDef(Node *parent) {
+	bool Parser::doFuncDef(Node *parent, bool isUse) {
 		FuncDef *fd = new FuncDef();
 		fd->name = identifier;
 		if (std_type == "") fd->type = "auto"; else fd->type = std_type;
 		addNode(parent, fd);
 		if (!doFuncDefParams(fd)) return false;
-		if (!doFuncDefBody(fd)) return false;
+		if (isUse) {
+			fd->isUse = true;
+		}
+		else {
+			if (!doFuncDefBody(fd)) return false;
+		}
 
 		return true;
 	}
@@ -153,11 +158,12 @@ namespace cj {
 				param->type = std_type;
 				param->name = identifier;
 
-				fd->params.insert(fd->params.end(), param);
+				fd->params.push_back(param);
 
 				if (isSpecial(")")) return true;
 				if (isSpecial(",")) continue;
 			}
+			return false;
 		}
 	}
 
@@ -296,6 +302,7 @@ namespace cj {
 		else if (oper == "for") return doOperatorFor(parent);
 		else if (oper == "while") return doOperatorWhile(parent);
 		else if (oper == "return") return doOperatorReturn(parent);
+		else if (oper == "use") return doOperatorUse(parent);
 		return false;
 	}
 
@@ -347,6 +354,14 @@ namespace cj {
 			if (doExpression(oper)) return true;
 		}
 		return isSpecial(";");
+	}
+
+	bool Parser::doOperatorUse(Node *parent) {
+		if (!isIdentifier()) return false;
+		if (!isSpecial("(")) return false;
+		if (!doFuncDef(parent)) return false;
+
+		return true;
 	}
 
 	bool Parser::doClass(Node *parent) {

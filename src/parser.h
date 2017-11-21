@@ -17,7 +17,7 @@ namespace cj {
 
 		virtual bool doFunc(Node *parent);
 		virtual bool doFuncCall(Node *parent);
-		virtual bool doFuncDef(Node *parent);
+		virtual bool doFuncDef(Node *parent, bool isUse = true);
 		virtual bool doFuncDefParams(FuncDef *fd);
 		virtual bool doFuncDefBody(Node *parent);
 
@@ -33,6 +33,7 @@ namespace cj {
 		virtual bool doOperatorFor(Node *parent);
 		virtual bool doOperatorWhile(Node *parent);
 		virtual bool doOperatorReturn(Node *parent);
+		virtual bool doOperatorUse(Node *parent);
 		
 		virtual bool doClass(Node *parent);
 		virtual bool doConstruct(Node *parent);
