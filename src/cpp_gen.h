@@ -4,10 +4,14 @@ namespace cj {
 
 	class CppGen : public Generator {
 	public:
-		CppGen(Parser *parser);
+		CppGen(Parser *parser, Str fn);
 		~CppGen();
-
+		virtual void setIncludes(vector<Str> &includes);
 	protected:
+		Str sCpp;
+		vector<Str> includes;
+
+		virtual Str getHeader();
 		virtual Str genNumber(Node *node);
 		virtual Str genString(Node *node);
 		virtual Str genVarDef(Node *node);

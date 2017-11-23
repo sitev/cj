@@ -13,9 +13,13 @@ namespace cj {
 		"float", "double", "real", "char", "str", "string", "ustring"
 	};
 
-	vector<Str> operators = { "if", "for", "while", "return", "use"};
+	vector<Str> operators = { "if", "for", "while", "return", "from"};
 
 	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%" };
+
+	FuncDef::FuncDef() {
+
+	}
 
 	Parser::Parser(Lexer *lexer) : lang::Parser(lexer) {
 
@@ -39,6 +43,7 @@ namespace cj {
 	}
 
 	bool Parser::doMainStatement(Node *parent) {
+		if (isEof()) return false;
 		if (isSpecial(";")) return true;
 		if (isSpecial("{")) {
 			return doCodeBlock(parent);
@@ -79,6 +84,7 @@ namespace cj {
 		}
 
 		if (isIdentifier()) {
+			if (isSpecial("(")) return doFunc(parent);
 			if (doVarDef(parent)) return true;
 			decPosition();
 			return doExpression(parent);
@@ -95,7 +101,7 @@ namespace cj {
 				rollback(pos);
 				return doFuncCall(parent);
 			}
-			if (isSpecial("{")) {
+			else {
 				rollback(pos);
 				return doFuncDef(parent);
 			}
@@ -110,7 +116,7 @@ namespace cj {
 			doExpression(parent);
 		}
 		else {
-			FuncDef *fd = findFuncDef(parent->parent, identifier);
+			FuncDef *fd = findFuncDef(parent->parent->parent->parent, identifier);
 			if (!fd) {
 				FuncDef *fd = new FuncDef();
 				fd->name = identifier;
@@ -119,7 +125,7 @@ namespace cj {
 			}
 
 			Func *func = new Func();
-			func->def = fd;
+			func->def = fd; //0x00698a08
 			addNode(parent, func);
 			if (isSpecial(")")) return true;
 			while (true) {
@@ -133,14 +139,17 @@ namespace cj {
 		return true;
 	}
 
-	bool Parser::doFuncDef(Node *parent, bool isUse) {
+	bool Parser::doFuncDef(Node *parent, bool isFrom) {
 		FuncDef *fd = new FuncDef();
 		fd->name = identifier;
 		if (std_type == "") fd->type = "auto"; else fd->type = std_type;
 		addNode(parent, fd);
 		if (!doFuncDefParams(fd)) return false;
-		if (isUse) {
-			fd->isUse = true;
+
+		if (isOperator("from")) {
+			fd->isFrom = true;
+			if (!isString()) return false;
+			fd->file = cur_string;
 		}
 		else {
 			if (!doFuncDefBody(fd)) return false;
@@ -302,7 +311,6 @@ namespace cj {
 		else if (oper == "for") return doOperatorFor(parent);
 		else if (oper == "while") return doOperatorWhile(parent);
 		else if (oper == "return") return doOperatorReturn(parent);
-		else if (oper == "use") return doOperatorUse(parent);
 		return false;
 	}
 
@@ -354,14 +362,6 @@ namespace cj {
 			if (doExpression(oper)) return true;
 		}
 		return isSpecial(";");
-	}
-
-	bool Parser::doOperatorUse(Node *parent) {
-		if (!isIdentifier()) return false;
-		if (!isSpecial("(")) return false;
-		if (!doFuncDef(parent)) return false;
-
-		return true;
 	}
 
 	bool Parser::doClass(Node *parent) {
@@ -541,21 +541,6 @@ namespace cj {
 		return true;
 	}
 
-	//bool Parser::isKeyword() {
-	//	keyword = "";
-	//	if (isStdType()) {
-	//		keyword = std_type;
-	//		return true;
-	//	}
-	//	if (isOperator()) {
-	//		keyword = oper;
-	//		return true;
-	//	}
-	//	return false;
-	//}
-
-
-
 	bool Parser::isNumber() {
 		savePosition();
 		token = getToken();
@@ -584,6 +569,15 @@ namespace cj {
 			if (token.lexeme == s) return true;
 		}
 
+		rollback();
+		return false;
+	}
+
+	bool Parser::isEof() {
+		savePosition();
+		token = getToken();
+		if (token.type == ltEof) return true;
+		
 		rollback();
 		return false;
 	}

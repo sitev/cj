@@ -8,7 +8,7 @@ using namespace std;
 
 namespace cj { 
 
-	JsGen::JsGen(Parser *parser) : Generator(parser) {
+	JsGen::JsGen(Parser *parser, Str fn) : Generator(parser, fn) {
 	}
 
 	JsGen::~JsGen() {

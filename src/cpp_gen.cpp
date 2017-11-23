@@ -8,10 +8,33 @@ using namespace std;
 
 namespace cj {
 
-	CppGen::CppGen(Parser *parser) : Generator(parser) {
+	CppGen::CppGen(Parser *parser, Str fn) : Generator(parser, fn) {
+		lstTarget.push_back(&sCpp);
+		ext.push_back("h");
+		ext.push_back("cpp");
+
+		int pos = fn.rfind("\\");
+		Str smallfn = fn.substr(pos + 1);
+		sCpp = "#include \"";
+		sCpp += smallfn + ".h\"\n\n";
 	}
 
 	CppGen::~CppGen() {
+	}
+
+	void CppGen::setIncludes(vector<Str> &includes) {
+		this->includes = includes;
+	}
+
+	Str CppGen::getHeader() {
+		Str s = "#pragma once\n\n";
+		int count = includes.size();
+		for (int i = 0; i < count; i++) {
+			s += "#include ";
+			s += includes[i] + "\n";
+		}
+		if (count != 0) s += "\n";
+		return s;
 	}
 
 	Str CppGen::genNumber(Node *node) {
@@ -84,9 +107,17 @@ namespace cj {
 
 	Str CppGen::genFuncDef(Node *node) {
 		FuncDef *fd = (FuncDef*)node;
-		if (fd->isUse) return "";
 
-		Str s = fd->type + " ";
+		Str s = "";
+
+		if (fd->isFrom) {
+			s += "#include ";
+			s += fd->file.substr(0, fd->file.length() - 1) + ".h\"\n\n";
+
+			return s;
+		}
+
+		s += fd->type + " ";
 		s += fd->name + "(";
 
 		int count = fd->params.size();
@@ -98,11 +129,16 @@ namespace cj {
 
 		s += ") ";
 
+		sCpp += s;
+		s += ";";
+
+
 		count = fd->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *nd = fd->nodes[i];
-			s += generate(nd);
+			sCpp += generate(nd);
 		}
+
 
 		return s;
 	}

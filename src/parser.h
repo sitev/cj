@@ -6,6 +6,15 @@ namespace cj {
 
 	enum ExpType {etNone, etInteger, etString};
 
+	class FuncDef : public lang::FuncDef {
+	public:
+		bool isFrom = false;
+		Str file;
+		vector<FuncDefParam*> params;
+		FuncDef();
+	};
+
+
 	class Parser : public lang::Parser {
 	public:
 		Parser(Lexer *lexer);
@@ -17,7 +26,7 @@ namespace cj {
 
 		virtual bool doFunc(Node *parent);
 		virtual bool doFuncCall(Node *parent);
-		virtual bool doFuncDef(Node *parent, bool isUse = true);
+		virtual bool doFuncDef(Node *parent, bool isFrom = true);
 		virtual bool doFuncDefParams(FuncDef *fd);
 		virtual bool doFuncDefBody(Node *parent);
 
@@ -33,7 +42,6 @@ namespace cj {
 		virtual bool doOperatorFor(Node *parent);
 		virtual bool doOperatorWhile(Node *parent);
 		virtual bool doOperatorReturn(Node *parent);
-		virtual bool doOperatorUse(Node *parent);
 		
 		virtual bool doClass(Node *parent);
 		virtual bool doConstruct(Node *parent);
@@ -55,7 +63,7 @@ namespace cj {
 		virtual bool isSpecial(Str s);
 		virtual bool find(Str s);
 
-		/*virtual bool isEof();*/
+		virtual bool isEof();
 		
 	protected:
 		Str std_type, oper, identifier, cur_string;

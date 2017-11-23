@@ -4,7 +4,7 @@ namespace cj {
 
 	class JsGen : public Generator {
 	public:
-		JsGen(Parser *parser);
+		JsGen(Parser *parser, Str fn);
 		~JsGen();
 
 	protected:

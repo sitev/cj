@@ -19,28 +19,39 @@ int main(int argc, char* argv[])
 	}
 
 
-/*
-Так видится будущее:
-1. парсим файл проектов
-2. запускаем некий интерпритатор
-...
+	/*
+	Так видится будущее:
+	1. парсим файл проектов
+	2. запускаем некий интерпритатор
+	...
 
-На данный момент
-1. парсим файл проектов
-2. поиск нужных полей
-...
-*/
+	На данный момент
+	1. парсим файл проектов
+	2. поиск нужных полей
+	...
+	*/
 	Str fn = argv[1];
 
 	File f(fn.to_string(), "rb");
 	Str s;
 	f.readAll(s);
 
+	Str sb = 
+		"int JsGen = 1;\n"
+		"int CppGen = 2;\n"
+		"Project{\n"
+		"	string sources[];\n"
+		"	string includes[];\n"
+		"	int generator;\n"
+		"}\n";
+
+	s = sb + s;
+
 	lang::Lexer *lexer = new lang::Lexer();       //s = lexer->run(s);
 	cj::Parser *parser = new cj::Parser(lexer);
 	s = parser->run(s);
 
-	vector<Str> sources; 
+	vector<Str> sources, includes;
 	Str genName;
 
 	bool isProjectFound = false;
@@ -72,6 +83,22 @@ int main(int argc, char* argv[])
 												if (node5->nodeType == ntString) {
 													StringNode *sn = (StringNode*)node5;
 													sources.push_back(sn->value);
+												}
+											}
+										}
+									}
+								}
+								if (var->def->name == "includes") {
+									int count3 = node3->nodes.size();
+									for (int i = 0; i < count3; i++) {
+										Node *node4 = node3->nodes[i];
+										if (node4->nodeType == ntExpression) {
+											int count4 = node4->nodes.size();
+											if (count4 > 0) {
+												Node *node5 = node4->nodes[0];
+												if (node5->nodeType == ntString) {
+													StringNode *sn = (StringNode*)node5;
+													includes.push_back(sn->value);
 												}
 											}
 										}
@@ -127,21 +154,17 @@ int main(int argc, char* argv[])
 	}
 	parser->run(s);
 
+	int pos = fn.rfind(".");
+	fn = fn.substr(0, pos);
 	Generator *generator;
-	if (genName == "JsGen") generator = new JsGen(parser);
-	else if (genName == "CppGen") generator = new CppGen(parser);
+	if (genName == "JsGen") generator = new JsGen(parser, fn);
+	else if (genName == "CppGen") {
+		generator = new CppGen(parser, fn);
+		((CppGen*)generator)->setIncludes(includes);
+	}
 	else return -1;
 
-	s = generator->run();
+	generator->run();
 
-	int pos = fn.rfind(".");
-	//fn = fn.substr(0, pos + 1) + "cpp";// "js";
-	fn = "c:/projects/cj/examples/8_desktop_console/console.cpp";
-
-	cout << "Target file: " << fn.to_string() << endl;
-
-	File fout(fn.to_string(), "wb");
-	fout.write((void*)s.to_string().c_str(), s.length());
-	
 	return 0;
 }
