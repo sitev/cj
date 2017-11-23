@@ -1,0 +1,5 @@
+project = Project {
+	sources: [ "guess.cj" ],
+	includes: [],
+	generator: CppGen
+}

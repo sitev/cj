@@ -15,7 +15,7 @@ namespace cj {
 
 	vector<Str> operators = { "if", "for", "while", "return", "from"};
 
-	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%" };
+	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%", "==", "!=", ">", "<", ">=", "<=" };
 
 	FuncDef::FuncDef() {
 
@@ -116,7 +116,10 @@ namespace cj {
 			doExpression(parent);
 		}
 		else {
-			FuncDef *fd = findFuncDef(parent->parent->parent->parent, identifier);
+//			FuncDef *fd = findFuncDef(parent->parent->parent->parent, identifier);
+// Продумать для функций - методов класса
+
+			FuncDef *fd = findFuncDef(nullptr, identifier);
 			if (!fd) {
 				FuncDef *fd = new FuncDef();
 				fd->name = identifier;

@@ -173,7 +173,7 @@ namespace cj {
 		if (count > 0) s += generate(oper->nodes[0]);
 		s += ") ";
 		if (count > 1) s += generate(oper->nodes[1]); else s += ";\r\n";
-		if (count > 2) s += (Str)"else " + generate(oper->nodes[2]);
+		if (count > 2) s += getTab(1) + (Str)"else " + generate(oper->nodes[2]);
 		return s;
 	}
 
