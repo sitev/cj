@@ -1,0 +1,47 @@
+file.h
+------
+class MyClass {
+};
+------------------------
+main.cpp
+--------
+#include "file.h"
+
+MyClass myclass;
+------------------------
+
+
+
+
+
+----------------------------
+myprj.pcj
+---------
+project = Project {
+	sources: [ 
+		"file1.cj", 
+		"file2.cj", 
+		"main.cj" 
+	],
+	generator: CppGen
+
+
+	libs: [
+		"lib1", "https://github.com/ijfjijfsjfsndui/wewdwedwe/wedwe"
+	]
+	
+	
+}
+
+
+1. myprj.pcj
+------------
+sources: "file1.cj", 
+		"file2.cj", 
+		"main.cj"
+generator: CppGen
+
+
+2. myprj.pcj
+
+cj myprj.pcj

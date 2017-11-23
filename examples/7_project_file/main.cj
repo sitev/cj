@@ -1,0 +1,1 @@
+int result = func1() + func2();

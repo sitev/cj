@@ -1,0 +1,139 @@
+Project {
+	string sources[];
+	int generator;
+	int a;
+}
+
+project = Project {
+	sources: [ "file1.cj", "file2.cj", "main.cj" ],
+	generator: CppGen
+}
+
+
+
+var_def
+
+exp
+	var
+	=
+	con
+		var
+			exp
+		var
+			exp
+	
+	
+//видимо, так более правильно	
+a = 2 + 3;	
+exp 
+	=
+		a
+		+
+			2
+			3
+	
+
+
+
+
+
+
+
+//	sources: [ "file1.cj", "file2.cj", "main.cj" ],
+//	generator: CppGen
+
+//Типы строк в Cj
+//str - UTF-8
+//string - UTF-16
+//ustring - UTF-32
+
+
+
+
+
+
+int a; // описание переменной
+int a[]; // массив
+
+MyClass a; // описание объекта-переменной
+MyClass a[]; // массив
+string a[];
+a = [ "qwe", "asd", "zxc" ];
+
+
+a = MyClass {
+	field1: 1, 
+	f2: 2
+}; //описание объекта-переменной
+
+MyClass a = {field1: 1, f2: 2}; //описание объекта-переменной
+
+Project {
+	string sources[];
+	int generator;
+	int a;
+}
+
+project = Project {
+	sources: [ "file1.cj", "file2.cj", "main.cj" ],
+	generator: CppGen
+}
+
+
+
+
+a.func1(); // используем
+
+class MyClass { //описание класса
+	...
+	func1();
+};
+
+a = myfunc(); //вызов фунции
+
+
+
+//a = new MyClass(p1, p2, p3); // вызов конструктора класса
+
+
+
+
+
+
+
+
+int a = 1;
+MyClass myclass[];
+
+project = Project {
+	sources: [ "file1.cj", "file2.cj", "main.cj" ],
+	generator: CppGen
+}
+
+project2 = Project;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+string s = "qwerty";
+s = "qwerty";
+
+string s = 10;
+s = 10;
+
+s = 10 + 20;
+
+string s = 10 + 20;
+
+a = -5;
+a = - "qwerty";

@@ -1,0 +1,41 @@
+8_desktop_console_cj.cpp
+---------------------
+
+#include "console_out_cpp.h"
+
+int main() {
+
+	console_out_cpp("I am console!");
+	
+}
+
+--------------------------------------------------
+
+1. Подключаем h-файл, имя файла = имени функции
+2.
+	use console_out_cpp(str s) from "my_console";
+	use myfunc(str s) from "my_console";
+	
+	Подключаем h-файл, имя файла задаём в операторе use
+
+
+
+
+
+
+Пишем в нашем проекте:
+--------------------------------------------------
+console_out_cpp.cpp
+-------------------
+
+void console_out_cpp(string s) {
+	cout << s << endl;
+}
+
+--------------------------------------------------
+console_out_cpp.h
+-----------------
+
+void console_out_cpp(string s);
+
+--------------------------------------------------

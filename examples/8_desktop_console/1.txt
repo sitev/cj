@@ -1,0 +1,39 @@
+8_desktop_console.cpp
+---------------------
+
+#include "console_cj.h"
+
+int main() {
+
+	console_out("I am console!");
+	
+}
+
+--------------------------------------------------
+console_cj.cpp
+--------------
+void console_out(string s) {
+	console_out_cpp("I am console!");
+}
+
+--------------------------------------------------
+console_cj.h
+------------
+
+void console_out(string s);
+
+--------------------------------------------------
+console_out_cpp.cpp
+-------------------
+
+void console_out_cpp(string s) {
+	cout << s << endl;
+}
+
+--------------------------------------------------
+console_out_cpp.h
+-----------------
+
+void console_out_cpp(string s);
+
+--------------------------------------------------

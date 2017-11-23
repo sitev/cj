@@ -1,0 +1,5 @@
+project = Project {
+	sources: [ "console.cj" ],
+	includes: [],
+	generator: CppGen
+}
