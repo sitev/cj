@@ -14,6 +14,13 @@ namespace cj {
 		FuncDef();
 	};
 
+	class Class : public lang::Class {
+	public:
+		bool isFrom = false;
+		Str file;
+		Class();
+	};
+
 
 	class Parser : public lang::Parser {
 	public:
@@ -43,7 +50,7 @@ namespace cj {
 		virtual bool doOperatorWhile(Node *parent);
 		virtual bool doOperatorReturn(Node *parent);
 		
-		virtual bool doClass(Node *parent);
+		virtual bool doClass(Node *parent, uint flags = 0);
 		virtual bool doConstruct(Node *parent);
 
 
@@ -57,7 +64,8 @@ namespace cj {
 		virtual bool isStdType();
 		virtual bool isOperator();
 		virtual bool isOperator(Str s);
-		//virtual bool isKeyword();
+		virtual bool isClass();
+
 		virtual bool isNumber();
 		virtual bool isLexeme(Str s);
 		virtual bool isSpecial(Str s);
@@ -67,11 +75,14 @@ namespace cj {
 		
 	protected:
 		Str std_type, oper, identifier, cur_string;
+		Class *clss = nullptr;
 		int number;
 		lang::Token token;
 		virtual void addNode(Node *parent, Node *node);
 		virtual VarDef* findVarDef(Node *parent, Str var);
+		virtual VarDef* findVarDefInParams(Node *parent, Str var);
 		virtual FuncDef* findFuncDef(Node *parent, Str func);
+		virtual FuncDef* findFuncDefIntoClass(Node *parent, Str func);
 		virtual Class* findClass(Node *parent, Str clss_nm);
 	};
 

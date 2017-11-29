@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
 	s = "";
 	count = sources.size();
-	Str prefix = "c:/projects/cj/examples/9_guess/";
+	Str prefix = "c:/projects/cj/examples/10_webapp_shop/";
 	for (int i = 0; i < count; i++) {
 		Str fileName = sources[i];
 		if (fileName < 2) return -1;

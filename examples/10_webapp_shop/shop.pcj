@@ -1,0 +1,5 @@
+project = Project {
+	sources: [ "shop.cj" ],
+	includes: [],
+	generator: CppGen
+}

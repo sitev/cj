@@ -21,6 +21,10 @@ namespace cj {
 
 	}
 
+	Class::Class() {
+
+	}
+
 	Parser::Parser(Lexer *lexer) : lang::Parser(lexer) {
 
 	}
@@ -58,9 +62,17 @@ namespace cj {
 			return doVarDef(parent);
 		}
 		
+		if (isClass()) {
+			if (!isIdentifier()) return false;
+			if (isSpecial("(")) return doFuncDef(parent);
+			return doVarDef(parent);
+		}
+
 		if (isIdentifier()) {
 			if (isSpecial("(")) return doFunc(parent);
 			if (isSpecial("{")) return doClass(parent);
+			if (isOperator("from")) return doClass(parent, 1);
+			if (isSpecial(":"))	return doClass(parent, 2);
 			if (doVarDef(parent)) return true;
 			decPosition();
 			return doExpression(parent);
@@ -79,6 +91,11 @@ namespace cj {
 		}
 
 		if (isStdType()) {
+			if (!isIdentifier()) return false;
+			return doVarDef(parent);
+		}
+
+		if (isClass()) {
 			if (!isIdentifier()) return false;
 			return doVarDef(parent);
 		}
@@ -116,10 +133,11 @@ namespace cj {
 			doExpression(parent);
 		}
 		else {
-//			FuncDef *fd = findFuncDef(parent->parent->parent->parent, identifier);
-// Продумать для функций - методов класса
+//???			FuncDef *fd = findFuncDef(parent->parent->parent->parent, identifier);
+//??? Продумать для функций - методов класса
 
 			FuncDef *fd = findFuncDef(nullptr, identifier);
+			if (!fd) fd = findFuncDef(parent->parent->parent->parent, identifier);
 			if (!fd) {
 				FuncDef *fd = new FuncDef();
 				fd->name = identifier;
@@ -128,7 +146,7 @@ namespace cj {
 			}
 
 			Func *func = new Func();
-			func->def = fd; //0x00698a08
+			func->def = fd;
 			addNode(parent, func);
 			if (isSpecial(")")) return true;
 			while (true) {
@@ -145,9 +163,33 @@ namespace cj {
 	bool Parser::doFuncDef(Node *parent, bool isFrom) {
 		FuncDef *fd = new FuncDef();
 		fd->name = identifier;
-		if (std_type == "") fd->type = "auto"; else fd->type = std_type;
+		if (parent) {
+			if (parent->nodeType == ntClass) {
+				Class *clss = (Class*)parent;
+				fd->owner = clss;
+				if (clss->name == identifier) {
+					fd->isConstruct = true;
+				}
+			}
+		}
+		if (fd->isConstruct && std_type != "") return false;
+		if (fd->isConstruct && clss != nullptr) return false;
+		if (!fd->isConstruct) {
+			if (clss) {
+				fd->clss = clss;
+			}
+			else {
+				if (std_type == "") fd->type = "auto"; else fd->type = std_type;
+			}
+		}
 		addNode(parent, fd);
 		if (!doFuncDefParams(fd)) return false;
+
+		if (fd->owner) {
+			if (((Class*)fd->owner)->isFrom) {
+				return isSpecial(";");
+			}
+		}
 
 		if (isOperator("from")) {
 			fd->isFrom = true;
@@ -164,16 +206,43 @@ namespace cj {
 	bool Parser::doFuncDefParams(FuncDef *fd) {
 		if (isSpecial(")")) return true;
 		while (true) {
-			isStdType();
-			if (isIdentifier()) {
-				FuncDefParam *param = new FuncDefParam();
-				param->type = std_type;
-				param->name = identifier;
+			if (isStdType()) {
+				if (isIdentifier()) {
+					FuncDefParam *param = new FuncDefParam();
+					param->type = std_type;
+					param->name = identifier;
 
-				fd->params.push_back(param);
+					fd->params.push_back(param);
 
-				if (isSpecial(")")) return true;
-				if (isSpecial(",")) continue;
+					if (isSpecial(")")) return true;
+					if (isSpecial(",")) continue;
+				}
+				return false;
+			}
+			else if (isIdentifier()) {
+				Class *clss = findClass(nullptr, identifier);
+				if (!clss) {
+					FuncDefParam *param = new FuncDefParam();
+					param->type = "auto";
+					param->name = identifier;
+
+					fd->params.push_back(param);
+
+					if (isSpecial(")")) return true;
+					if (isSpecial(",")) continue;
+				}
+				else {
+					if (isIdentifier()) {
+						FuncDefParam *param = new FuncDefParam();
+						param->clss = clss;
+						param->name = identifier;
+
+						fd->params.push_back(param);
+
+						if (isSpecial(")")) return true;
+						if (isSpecial(",")) continue;
+					}
+				}
 			}
 			return false;
 		}
@@ -189,7 +258,13 @@ namespace cj {
 
 		VarDef *vd = new VarDef();
 		vd->name = identifier;
-		if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+		if (clss) {
+			vd->clss = clss;
+		}
+		else {
+			if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+		}
+		
 		addNode(parent, vd);
 
 		if (isSpecial("[")) {
@@ -221,6 +296,7 @@ namespace cj {
 		}
 		else {
 			VarDef *vd = findVarDef(parent->parent, identifier);
+			if (!vd) vd = findVarDefInParams(parent->parent->parent, identifier);
 			if (!vd) {
 				vd = new VarDef();
 				vd->name = identifier;
@@ -367,10 +443,28 @@ namespace cj {
 		return isSpecial(";");
 	}
 
-	bool Parser::doClass(Node *parent) {
+	bool Parser::doClass(Node *parent, uint flags) {
 		Class *clss = new Class();
 		clss->name = identifier;
 		addNode(parent, clss);
+		if (flags == 1) {
+			clss->isFrom = true;
+			if (isString()) {
+				if (isSpecial("{")) clss->file = cur_string;
+				else return false;
+			}
+			else return false;
+		}
+		else if (flags == 2) {
+			if (isIdentifier()) {
+				Class *clss2 = findClass(nullptr, identifier);
+				if (!clss2) return false;
+				if (isSpecial("{")) clss->file = cur_string;
+				else return false;
+				clss->parent = clss2;
+			}
+			else return false;
+		}
 		while (true) {
 			if (isSpecial("}")) return true;
 			if (isStdType()) {
@@ -544,6 +638,18 @@ namespace cj {
 		return true;
 	}
 
+	bool Parser::isClass() {
+		clss = nullptr;
+		savePosition();
+		token = getToken();
+		if (token.type == ltIdentifier) {
+			clss = findClass(nullptr, token.lexeme);
+			if (clss) return true;
+		}
+		rollback();
+		return false;
+	}
+
 	bool Parser::isNumber() {
 		savePosition();
 		token = getToken();
@@ -624,6 +730,18 @@ namespace cj {
 		//return nullptr;
 	}
 
+	VarDef* Parser::findVarDefInParams(Node *parent, Str var) {
+		if (parent->nodeType != ntFuncDef) return nullptr;
+		FuncDef *fd = (FuncDef*)parent;
+		int count = fd->params.size();
+		for (int i = 0; i < count; i++) {
+			FuncDefParam *fdp = fd->params[i];
+			if (fdp->name == var) return fdp;
+		}
+
+		return nullptr;
+	}
+
 	FuncDef* Parser::findFuncDef(Node *parent, Str func) {
 		if (parent == nullptr) {
 			int count = nodes.size();
@@ -636,6 +754,18 @@ namespace cj {
 			}
 			return nullptr;
 		}
+		if (parent->nodeType == ntClass) {
+			Class *clss = (Class*)parent;
+			while (clss) {
+				FuncDef *fd = findFuncDefIntoClass(clss, func);
+				if (fd) return fd;
+				clss = (Class*)(clss->parent);
+			}
+		}
+		return nullptr;
+	}
+
+	FuncDef* Parser::findFuncDefIntoClass(Node *parent, Str func) {
 		int count = parent->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *node = parent->nodes[i];

@@ -54,10 +54,12 @@ namespace cj {
 		Str s;
 		if (vd->isArray) {
 			s = "vector<";
-			s += vd->type + "> " + vd->name;
+			if (vd->clss) s += vd->clss->name + "*> " + vd->name;
+			else s += vd->type + "> " + vd->name;
 		}
 		else {
-			s = vd->type + " ";
+			if (vd->clss) s += vd->clss->name + " *";
+			else s = vd->type + " ";
 			s += vd->name;
 		}
 		s += ";\r\n";
@@ -117,20 +119,52 @@ namespace cj {
 			return s;
 		}
 
-		s += fd->type + " ";
+		if (!fd->isConstruct) {
+			if (fd->clss) {
+				s += fd->clss->name + "* ";
+				sCpp += fd->clss->name + "* ";
+			}
+			else {
+				s += fd->type + " ";
+				sCpp += fd->type + " ";
+			}
+		}
+		if (fd->owner) sCpp += fd->owner->name + "::";
 		s += fd->name + "(";
+		sCpp += fd->name + "(";
 
 		int count = fd->params.size();
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
+			if (fdp->clss) s += fdp->clss->name + " *";
+			else s += fdp->type + " ";
 			s += fdp->name;
-			if (i + 1 != count) s += ", ";
+
+			if (fdp->clss) sCpp += fdp->clss->name + " *";
+			else sCpp += fdp->type + " ";
+			sCpp += fdp->name;
+			if (i + 1 != count) {
+				s += ", ";
+				sCpp += ", ";
+			}
 		}
 
-		s += ") ";
+		s += ")";
+		sCpp += ") ";
+		s += ";\n";
 
-		sCpp += s;
-		s += ";";
+		if (fd->isConstruct) {
+			if (fd->owner->parent) {
+				sCpp += (Str)": " + fd->owner->parent->name + "(";
+				int count = fd->params.size();
+				for (int i = 0; i < count; i++) {
+					FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
+					sCpp += fdp->name;
+					if (i + 1 != count) sCpp += ", ";
+				}
+				sCpp += ") ";
+			}
+		}
 
 
 		count = fd->nodes.size();
@@ -238,14 +272,27 @@ namespace cj {
 			if (s2 != "") s += getTab(1) + s2;
 		}
 
-		s += "}\r\n";
+		s += "}\n\n";
 		return s;
 	}
 
 	Str CppGen::genClass(Node *node) {
 		Class *clss = (Class*)node;
-		Str s = "class ";
-		s += clss->name + " {\r\n";
+		Str s;
+		if (clss->isFrom) {
+			s = (Str)"#include ";
+			s += clss->file.substr(0, clss->file.length() - 1) + ".h\"\n\n";
+
+			return s;
+		}
+		s = "class ";
+		s += clss->name;
+		
+		if (clss->parent != nullptr) {
+			s += (Str)" : " + clss->parent->name;
+		}
+
+		s += " {\r\n";
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
