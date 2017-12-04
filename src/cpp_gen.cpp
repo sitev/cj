@@ -138,10 +138,12 @@ namespace cj {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
 			if (fdp->clss) s += fdp->clss->name + " *";
 			else s += fdp->type + " ";
+			if (fdp->isRef) s += "&";
 			s += fdp->name;
 
 			if (fdp->clss) sCpp += fdp->clss->name + " *";
 			else sCpp += fdp->type + " ";
+			if (fdp->isRef) sCpp += "&";
 			sCpp += fdp->name;
 			if (i + 1 != count) {
 				s += ", ";
@@ -170,7 +172,7 @@ namespace cj {
 		count = fd->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *nd = fd->nodes[i];
-			sCpp += generate(nd);
+			generate(nd);
 		}
 
 
@@ -263,17 +265,17 @@ namespace cj {
 	}
 
 	Str CppGen::genCodeBlock(Node *node) {
-		Str s = "{\r\n";
+		sCpp += "{\n";
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
 			Str s2 = generate(nd);
-			if (s2 != "") s += getTab(1) + s2;
+			if (s2 != "") sCpp += getTab(1) + s2;
 		}
 
-		s += "}\n\n";
-		return s;
+		sCpp += "}\n\n";
+		return "";
 	}
 
 	Str CppGen::genClass(Node *node) {
@@ -318,6 +320,44 @@ namespace cj {
 		}
 
 //		s += "};\r\n";
+		return s;
+	}
+
+	Str CppGen::genCodeInsertion(Node *node) {
+		CodeInsertion *ci = (CodeInsertion*)node;
+		Str s = "";
+		if (ci->cit == ciCpph) {
+			s += formatStr(ci);
+		}
+		else if (ci->cit == ciCpp) {
+			Str s2 = formatStr(ci);
+			sCpp += s2;
+		}
+		return s;
+	}
+
+	Str CppGen::formatStr(CodeInsertion *ci) {
+		int count = ci->tokens.size();
+		Token prev;
+		Str s = "";
+		bool bNewLine = false;
+		int level = 0;
+		for (int i = 0; i < count; i++) {
+			Token token = ci->tokens[i];
+			if (token.lexeme == "}") level--;
+			if (bNewLine) s += this->getTab(level);
+			bNewLine = false;
+			s += token.lexeme;
+			if (token.lexeme == ";" || token.lexeme == "{" || token.lexeme == "}") {
+				if (token.lexeme == "{") level++;
+				s += "\n";
+				bNewLine = true;
+			}
+			else if (token.lexeme == ",") s += " ";
+			else if (token.lexeme == "=") s += " ";
+//			prev = token;
+		}
+		if (!bNewLine) s += "\n";
 		return s;
 	}
 

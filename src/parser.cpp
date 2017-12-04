@@ -13,7 +13,7 @@ namespace cj {
 		"float", "double", "real", "char", "str", "string", "ustring"
 	};
 
-	vector<Str> operators = { "if", "for", "while", "return", "from"};
+	vector<Str> operators = { "if", "for", "while", "return", "from" };
 
 	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%", "==", "!=", ">", "<", ">=", "<=" };
 
@@ -22,6 +22,10 @@ namespace cj {
 	}
 
 	Class::Class() {
+
+	}
+
+	CodeInsertion::CodeInsertion() {
 
 	}
 
@@ -52,6 +56,11 @@ namespace cj {
 		if (isSpecial("{")) {
 			return doCodeBlock(parent);
 		}
+
+		if (isSpecial("@")) {
+			return doCodeInsertion(parent);
+		}
+
 		if (isOperator()) {
 			return doOperator(parent);
 		}
@@ -86,6 +95,11 @@ namespace cj {
 		if (isSpecial("{")) {
 			return doCodeBlock(parent);
 		}
+
+		if (isSpecial("@")) {
+			return doCodeInsertion(parent);
+		}
+
 		if (isOperator()) {
 			return doOperator(parent);
 		}
@@ -206,9 +220,12 @@ namespace cj {
 	bool Parser::doFuncDefParams(FuncDef *fd) {
 		if (isSpecial(")")) return true;
 		while (true) {
+			bool isRef = false;
 			if (isStdType()) {
+				if (isSpecial("&")) isRef = true;
 				if (isIdentifier()) {
 					FuncDefParam *param = new FuncDefParam();
+					param->isRef = isRef;
 					param->type = std_type;
 					param->name = identifier;
 
@@ -219,28 +236,35 @@ namespace cj {
 				}
 				return false;
 			}
-			else if (isIdentifier()) {
-				Class *clss = findClass(nullptr, identifier);
-				if (!clss) {
-					FuncDefParam *param = new FuncDefParam();
-					param->type = "auto";
-					param->name = identifier;
-
-					fd->params.push_back(param);
-
-					if (isSpecial(")")) return true;
-					if (isSpecial(",")) continue;
-				}
-				else {
-					if (isIdentifier()) {
+			else {
+				if (isSpecial("&")) isRef = true;
+				if (isIdentifier()) {
+					Class *clss = findClass(nullptr, identifier);
+					if (!clss) {
 						FuncDefParam *param = new FuncDefParam();
-						param->clss = clss;
+						param->isRef = isRef;
+						param->type = "auto";
 						param->name = identifier;
 
 						fd->params.push_back(param);
 
 						if (isSpecial(")")) return true;
 						if (isSpecial(",")) continue;
+					}
+					else {
+						if (isRef) return false;
+						if (isSpecial("&")) isRef = true;
+						if (isIdentifier()) {
+							FuncDefParam *param = new FuncDefParam();
+							param->isRef = isRef;
+							param->clss = clss;
+							param->name = identifier;
+
+							fd->params.push_back(param);
+
+							if (isSpecial(")")) return true;
+							if (isSpecial(",")) continue;
+						}
 					}
 				}
 			}
@@ -467,7 +491,12 @@ namespace cj {
 		}
 		while (true) {
 			if (isSpecial("}")) return true;
-			if (isStdType()) {
+
+			if (isSpecial("@")) {
+				bool flag = doCodeInsertion(clss);
+				if (!flag) return false;
+			}
+			else if (isStdType()) {
 				if (!isIdentifier()) return false;
 				if (isSpecial("(")) {
 					bool flag = doFuncDef(clss);
@@ -571,6 +600,33 @@ namespace cj {
 		}
 		return false;
 	}
+
+	bool Parser::doCodeInsertion(Node *parent) {
+		if (!isIdentifier()) return false;
+
+		CodeInsertion *ci = new CodeInsertion();
+		if (identifier == "cpp") ci->cit = ciCpp;
+		else if (identifier == "cpph") ci->cit = ciCpph;
+		else if (identifier == "js") ci->cit = ciJs;
+		else return false;
+
+		addNode(parent, ci);
+
+		if (!isSpecial("{")) return false;
+		int level = 1;
+		ci->tokens.clear();
+		while (true) {
+			Token token = getToken();
+			if (token.type == ltSpecial) {
+				if (token.lexeme == "{") level++;
+				else if (token.lexeme == "}") level--;
+			}
+			if (level <= 0) break;
+			ci->tokens.push_back(token);
+		}
+		return true;
+	}
+
 
 
 

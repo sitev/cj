@@ -21,6 +21,15 @@ namespace cj {
 		Class();
 	};
 
+	enum CodeInsertionType {ciNone, ciCpp, ciCpph, ciJs};
+
+	class CodeInsertion : public lang::CodeInsertion {
+	public:
+		vector<Token> tokens;
+		CodeInsertionType cit = ciNone;
+		CodeInsertion();
+	};
+
 
 	class Parser : public lang::Parser {
 	public:
@@ -58,6 +67,8 @@ namespace cj {
 		virtual bool doExpression(Node *node, bool isCreateExpressionNode = true);
 		virtual bool doUnaryOperator(Node *parent);
 		virtual bool doBinaryOperator(Node *parent);
+
+		virtual bool doCodeInsertion(Node *parent);
 
 		virtual bool isIdentifier();
 		virtual bool isString();

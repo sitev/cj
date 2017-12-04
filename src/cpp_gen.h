@@ -28,6 +28,8 @@ namespace cj {
 		virtual Str genCodeBlock(Node *node);
 		virtual Str genClass(Node *node);
 		virtual Str genConstruct(Node *node);
+		virtual Str genCodeInsertion(Node *node);
+		virtual Str formatStr(CodeInsertion *ci);
 	};
 
 }
