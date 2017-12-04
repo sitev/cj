@@ -22,12 +22,14 @@
     <ClCompile Include="..\..\src\cj.cpp" />
     <ClCompile Include="..\..\src\cpp_gen.cpp" />
     <ClCompile Include="..\..\src\js_gen.cpp" />
+    <ClCompile Include="..\..\src\lexer.cpp" />
     <ClCompile Include="..\..\src\parser.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\cj.h" />
     <ClInclude Include="..\..\src\cpp_gen.h" />
     <ClInclude Include="..\..\src\js_gen.h" />
+    <ClInclude Include="..\..\src\lexer.h" />
     <ClInclude Include="..\..\src\parser.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

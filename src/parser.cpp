@@ -29,7 +29,7 @@ namespace cj {
 
 	}
 
-	Parser::Parser(Lexer *lexer) : lang::Parser(lexer) {
+	Parser::Parser(lang::Lexer *lexer) : lang::Parser(lexer) {
 
 	}
 
@@ -612,18 +612,8 @@ namespace cj {
 
 		addNode(parent, ci);
 
-		if (!isSpecial("{")) return false;
-		int level = 1;
-		ci->tokens.clear();
-		while (true) {
-			Token token = getToken();
-			if (token.type == ltSpecial) {
-				if (token.lexeme == "{") level++;
-				else if (token.lexeme == "}") level--;
-			}
-			if (level <= 0) break;
-			ci->tokens.push_back(token);
-		}
+		if (!isCodeInsertion()) return false;
+		ci->source = source;
 		return true;
 	}
 
@@ -737,6 +727,19 @@ namespace cj {
 		rollback();
 		return false;
 	}
+
+	bool Parser::isCodeInsertion() {
+		savePosition();
+		token = getToken();
+		if (token.type == ltCodeInsertion) {
+			source = token.lexeme;
+			return true;
+		}
+
+		rollback();
+		return false;
+	}
+
 
 	bool Parser::isEof() {
 		savePosition();

@@ -1,6 +1,8 @@
 #pragma once
 
 void func111();
+
+// { code insertion
 #include "cms.h"
 
 #include "cms.h"
@@ -11,6 +13,14 @@ void func111();
 
 class Shop : WebModule {
 	Shop(SiteManager *manager);
-	virtualvoidpaint(WebPage*page, HttpRequest&request);
-		void paint111(WebPage *page, HttpRequest *&request);
+	
+// { code insertion
+
+	virtual void paint(WebPage *page, HttpRequest &request);
+	
+// } code insertion
+
+	
+// { code insertion
+	void paint(WebPage *page, HttpRequest *&request);
 };

@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
 	s = sb + s;
 
-	lang::Lexer *lexer = new lang::Lexer();       //s = lexer->run(s);
+	cj::Lexer *lexer = new cj::Lexer();       //s = lexer->run(s);
 	cj::Parser *parser = new cj::Parser(lexer);
 	s = parser->run(s);
 

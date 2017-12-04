@@ -325,39 +325,16 @@ namespace cj {
 
 	Str CppGen::genCodeInsertion(Node *node) {
 		CodeInsertion *ci = (CodeInsertion*)node;
-		Str s = "";
+		Str s = "\n// { code insertion\n";
 		if (ci->cit == ciCpph) {
-			s += formatStr(ci);
+			s += ci->source;
+			s += "\n// } code insertion\n\n";
 		}
 		else if (ci->cit == ciCpp) {
-			Str s2 = formatStr(ci);
-			sCpp += s2;
+			sCpp += "\n// { code insertion\n";
+			sCpp += ci->source;
+			sCpp += "\n// } code insertion\n\n";
 		}
-		return s;
-	}
-
-	Str CppGen::formatStr(CodeInsertion *ci) {
-		int count = ci->tokens.size();
-		Token prev;
-		Str s = "";
-		bool bNewLine = false;
-		int level = 0;
-		for (int i = 0; i < count; i++) {
-			Token token = ci->tokens[i];
-			if (token.lexeme == "}") level--;
-			if (bNewLine) s += this->getTab(level);
-			bNewLine = false;
-			s += token.lexeme;
-			if (token.lexeme == ";" || token.lexeme == "{" || token.lexeme == "}") {
-				if (token.lexeme == "{") level++;
-				s += "\n";
-				bNewLine = true;
-			}
-			else if (token.lexeme == ",") s += " ";
-			else if (token.lexeme == "=") s += " ";
-//			prev = token;
-		}
-		if (!bNewLine) s += "\n";
 		return s;
 	}
 

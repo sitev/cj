@@ -1,20 +1,41 @@
 #include "shop.h"
 
 void func111() {
-inta= 111;
+
+// { code insertion
+
+		int a = 111;
+	
+// } code insertion
+
+	
+// { code insertion
 }
 
-#defineTEST_TEST
+
+// { code insertion
+
+#define TEST_TEST
+
+// } code insertion
+
 Shop::Shop(SiteManager *manager) : WebModule(manager) {
 	setOptionsFromDB(14);
 }
 
-voidShop::paint(WebPage*page, HttpRequest&request){
-	cout<<"paint(WebPage *page, HttpRequest &request);"<<endl;
-	HttpRequest*req= &request;
+
+// { code insertion
+
+void Shop::paint(WebPage *page, HttpRequest &request) {
+	cout << "paint(WebPage *page, HttpRequest &request);" << endl;
+	
+	HttpRequest *req = &request;
 	paint(page, req);
 }
-void Shop::paint111(WebPage *page, HttpRequest *&request) {
+	
+// } code insertion
+
+void Shop::paint(WebPage *page, HttpRequest *&request) {
 	int b;
 	b = 5;
 }

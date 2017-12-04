@@ -25,15 +25,15 @@ namespace cj {
 
 	class CodeInsertion : public lang::CodeInsertion {
 	public:
-		vector<Token> tokens;
 		CodeInsertionType cit = ciNone;
+		Str source;
 		CodeInsertion();
 	};
 
 
 	class Parser : public lang::Parser {
 	public:
-		Parser(Lexer *lexer);
+		Parser(lang::Lexer *lexer);
 
 		virtual bool doMainCodeBlock();
 		virtual bool doCodeBlock(Node *parent);
@@ -82,10 +82,11 @@ namespace cj {
 		virtual bool isSpecial(Str s);
 		virtual bool find(Str s);
 
+		virtual bool isCodeInsertion();
 		virtual bool isEof();
 		
 	protected:
-		Str std_type, oper, identifier, cur_string;
+		Str std_type, oper, identifier, cur_string, source;
 		Class *clss = nullptr;
 		int number;
 		lang::Token token;
