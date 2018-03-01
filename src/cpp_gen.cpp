@@ -15,8 +15,7 @@ namespace cj {
 
 		int pos = fn.rfind("\\");
 		Str smallfn = fn.substr(pos + 1);
-		sCpp = "#include \"";
-		sCpp += smallfn + ".h\"\n\n";
+		sCpp = "";
 	}
 
 	CppGen::~CppGen() {
@@ -24,6 +23,12 @@ namespace cj {
 
 	void CppGen::setIncludes(vector<Str> &includes) {
 		this->includes = includes;
+	}
+
+	void CppGen::setNamespace(Str namespce) {
+		this->namespce = namespce;
+		sCpp = "#include \"";
+		sCpp += namespce + ".h\"\n\n";
 	}
 
 	Str CppGen::getHeader() {
@@ -34,6 +39,15 @@ namespace cj {
 			s += includes[i] + "\n";
 		}
 		if (count != 0) s += "\n";
+		if (namespce != "") s += (Str)"namespace " + namespce + " {\n";
+
+		sCpp += (Str)"namespace " + namespce + " {\n";
+		return s;
+	}
+
+	Str CppGen::getFooter() {
+		sCpp += "\n}\n";
+		Str s = "\n}\n";
 		return s;
 	}
 
@@ -55,11 +69,11 @@ namespace cj {
 		if (vd->isArray) {
 			s = "vector<";
 			if (vd->clss) s += vd->clss->name + "*> " + vd->name;
-			else s += vd->type + "> " + vd->name;
+			else s += genType(vd->type) + "> " + vd->name;
 		}
 		else {
 			if (vd->clss) s += vd->clss->name + " *";
-			else s = vd->type + " ";
+			else s = genType(vd->type) + " ";
 			s += vd->name;
 		}
 		s += ";\r\n";
@@ -125,8 +139,8 @@ namespace cj {
 				sCpp += fd->clss->name + "* ";
 			}
 			else {
-				s += fd->type + " ";
-				sCpp += fd->type + " ";
+				s += genType(fd->type) + " ";
+				sCpp += genType(fd->type) + " ";
 			}
 		}
 		if (fd->owner) sCpp += fd->owner->name + "::";
@@ -137,12 +151,12 @@ namespace cj {
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
 			if (fdp->clss) s += fdp->clss->name + " *";
-			else s += fdp->type + " ";
+			else s += genType(fdp->type) + " ";
 			if (fdp->isRef) s += "&";
 			s += fdp->name;
 
 			if (fdp->clss) sCpp += fdp->clss->name + " *";
-			else sCpp += fdp->type + " ";
+			else sCpp += genType(fdp->type) + " ";
 			if (fdp->isRef) sCpp += "&";
 			sCpp += fdp->name;
 			if (i + 1 != count) {
@@ -209,7 +223,7 @@ namespace cj {
 		if (count > 0) s += generate(oper->nodes[0]);
 		s += ") ";
 		if (count > 1) s += generate(oper->nodes[1]); else s += ";\r\n";
-		if (count > 2) s += getTab(1) + (Str)"else " + generate(oper->nodes[2]);
+		if (count > 2) s += getTab(1, 2) + (Str)"else " + generate(oper->nodes[2]);
 		return s;
 	}
 
@@ -242,6 +256,7 @@ namespace cj {
 
 	Str CppGen::genExpOper(Node *node) {
 		Operator *oper = (Operator*)node;
+		if (oper->name == ".") return "->";
 		Str s = (Str)" " + oper->name + " ";
 		return s;
 	}
@@ -271,7 +286,7 @@ namespace cj {
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
 			Str s2 = generate(nd);
-			if (s2 != "") sCpp += getTab(1) + s2;
+			if (s2 != "") sCpp += getTab(1, 3) + s2;
 		}
 
 		sCpp += "}\n\n";
@@ -282,8 +297,15 @@ namespace cj {
 		Class *clss = (Class*)node;
 		Str s;
 		if (clss->isFrom) {
-			s = (Str)"#include ";
-			s += clss->file.substr(0, clss->file.length() - 1) + ".h\"\n\n";
+			bool flag = false;
+			int count = froms.size();
+			for (int i = 0; i < count; i++) {
+				if (clss->file == froms[i]) flag = true;
+			}
+			if (!flag) {
+				s = (Str)"#include " + clss->file.substr(0, clss->file.length() - 1) + ".h\"\n\n";
+				froms.push_back(clss->file);
+			}
 
 			return s;
 		}
@@ -291,16 +313,17 @@ namespace cj {
 		s += clss->name;
 		
 		if (clss->parent != nullptr) {
-			s += (Str)" : " + clss->parent->name;
+			s += (Str)" : public " + clss->parent->name;
 		}
 
-		s += " {\r\n";
+		s += " {\r\npublic:\r\n";
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
 			Str s2 = generate(nd);
-			s = s + getTab(1) + s2;
+			if (s2 == "") continue;
+			s = s + getTab(1, 4) + s2;
 		}
 
 		s += "};\r\n";
@@ -316,7 +339,7 @@ namespace cj {
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
 			Str s2 = generate(nd);
-			s = s + getTab(1) + s2;
+			s = s + getTab(1, 5) + s2;
 		}
 
 //		s += "};\r\n";
@@ -325,8 +348,9 @@ namespace cj {
 
 	Str CppGen::genCodeInsertion(Node *node) {
 		CodeInsertion *ci = (CodeInsertion*)node;
-		Str s = "\n// { code insertion\n";
+		Str s;
 		if (ci->cit == ciCpph) {
+			s = "\n// { code insertion\n";
 			s += ci->source;
 			s += "\n// } code insertion\n\n";
 		}
@@ -338,4 +362,8 @@ namespace cj {
 		return s;
 	}
 
+	Str CppGen::genType(Str type) {
+		if (type == "string") return "String";
+		return type;
+	}
 }

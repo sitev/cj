@@ -15,7 +15,7 @@ namespace cj {
 
 	vector<Str> operators = { "if", "for", "while", "return", "from" };
 
-	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%", "==", "!=", ">", "<", ">=", "<=" };
+	vector<Str> ari_opers = { "=", "+", "-", "*", "/", "%", "==", "!=", ">", "<", ">=", "<=", "." };
 
 	FuncDef::FuncDef() {
 
@@ -152,6 +152,26 @@ namespace cj {
 
 			FuncDef *fd = findFuncDef(nullptr, identifier);
 			if (!fd) fd = findFuncDef(parent->parent->parent->parent, identifier);
+			if (!fd) {
+				Expression *exp = (Expression*)parent;
+				int count = exp->nodes.size();
+				if (count >= 2) {
+					Node *node = exp->nodes[count - 1];
+					if (node->nodeType == ntExpOper) {
+						ExpOper *expOper = (ExpOper*)node;
+						if (expOper->name == ".") {
+							node = exp->nodes[count - 2];
+							if (node->nodeType == ntVar) {
+								Var *var = (Var*)node;
+								fd = findFuncDefIntoVar(var, identifier);
+							}
+							else if (node->nodeType == ntFunc) {
+								int a = 1; //??? Здесь возможна какая-то обработка )))))
+							}
+						}
+					}
+				}
+			}
 			if (!fd) {
 				FuncDef *fd = new FuncDef();
 				fd->name = identifier;
@@ -310,6 +330,11 @@ namespace cj {
 
 			return doExpression(exp, false);
 		}
+		if (isOperator("from")) {
+			vd->isFrom = true;
+			if (!isString()) return false;
+			vd->file = cur_string;
+		}
 		return isSpecial(";");
 	}
 
@@ -322,15 +347,53 @@ namespace cj {
 			VarDef *vd = findVarDef(parent->parent, identifier);
 			if (!vd) vd = findVarDefInParams(parent->parent->parent, identifier);
 			if (!vd) {
+				Expression *exp = (Expression*)parent;
+				int count = exp->nodes.size();
+				if (count >= 2) {
+					Node *node = exp->nodes[count - 1];
+					if (node->nodeType == ntExpOper) {
+						ExpOper *expOper = (ExpOper*)node;
+						if (expOper->name == ".") {
+							node = exp->nodes[count - 2];
+							if (node->nodeType == ntVar) {
+								Var *var = (Var*)node;
+								vd = findVarDefIntoVar(var, identifier);
+							}
+							else if (node->nodeType == ntFunc) {
+								int a = 1; //??? Здесь возможна какая-то обработка )))))
+							}
+						}
+					}
+				}
+			}
+			if (!vd) {
 				vd = new VarDef();
 				vd->name = identifier;
 				vd->type = "auto";
 				addNode(parent->parent, vd);
 			}
 
-			Var *node = new Var();
-			node->def = vd;
-			addNode(parent, node);
+			Var *var = new Var();
+			var->def = vd;
+			addNode(parent, var);
+
+			//if (vd->clss) {
+			//	if (isSpecial(".")) {
+			//		if (isIdentifier()) {
+			//			int count = vd->clss->nodes.size();
+			//			for (int i = 0; i < count; i++) {
+			//				Node *node = vd->clss->nodes[i];
+			//				if (node->nodeType == ntVarDef) {
+			//					VarDef *vd = (VarDef*)node;
+			//				}
+			//				else if (node->nodeType == ntFuncDef) {
+			//					FuncDef *fd = (FuncDef*)node;
+			//				}
+			//			}
+			//			int a = 1;
+			//		}
+			//	}
+			//}
 
 			if (vd->isArray) {
 				if (isSpecial("[")) {
@@ -357,7 +420,7 @@ namespace cj {
 			if (!isIdentifier()) return false;
 			if (!isSpecial(":")) return false;
 			//1. Найти в классе clss свойство identifier
-			VarDef *vd = clss->findVar(identifier);
+			cj::VarDef *vd = (cj::VarDef*)clss->findVar(identifier);
 
 			//2. Определить его тип/класс
 			// if (vd->clss) vd->clss
@@ -380,13 +443,18 @@ namespace cj {
 
 	bool Parser::doVarInit(Node *parent, VarDef *vd) {
 		//Array of string
-		if (vd->type == "string" && vd->isArray) {
-			if (!isSpecial("[")) return false;
-			if (isSpecial("]")) return true;
-			while (true) {
-				if (!doExpression(parent)) return false;
-				if (isSpecial(",")) continue;
-				return isSpecial("]");
+		if (vd->type == "string") {
+			if (vd->isArray) {
+				if (!isSpecial("[")) return false;
+				if (isSpecial("]")) return true;
+				while (true) {
+					if (!doExpression(parent)) return false;
+					if (isSpecial(",")) continue;
+					return isSpecial("]");
+				}
+			}
+			else {
+				return doExpression(parent);
 			}
 		}
 		else if (vd->type == "int") {
@@ -514,8 +582,14 @@ namespace cj {
 					if (!flag) return false;
 				}
 				else {
-					bool flag = doVarDef(clss);
-					if (!flag) return false;
+					Class *clss2 = findClass(nullptr, identifier);
+					if (clss2) {
+						//если это класс, то тут возможна обработка описания функции или перепенной
+					}
+					else {
+						bool flag = doVarDef(clss);
+						if (!flag) return false;
+					}
 				}
 			}
 		}
@@ -801,6 +875,22 @@ namespace cj {
 		return nullptr;
 	}
 
+	VarDef* Parser::findVarDefIntoClass(Node *parent, Str var) {
+		int count = parent->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *node = parent->nodes[i];
+			if (node->nodeType == ntVarDef) {
+				VarDef *vd = (VarDef*)node;
+				if (vd->name == var) return vd;
+			}
+		}
+		return nullptr;
+	}
+
+	VarDef* Parser::findVarDefIntoVar(Var *var, Str vn) {
+		return findVarDefIntoClass(var->def->clss, vn);
+	}
+
 	FuncDef* Parser::findFuncDef(Node *parent, Str func) {
 		if (parent == nullptr) {
 			int count = nodes.size();
@@ -834,6 +924,10 @@ namespace cj {
 			}
 		}
 		return nullptr;
+	}
+
+	FuncDef* Parser::findFuncDefIntoVar(Var *var, Str func) {
+		return findFuncDefIntoClass(var->def->clss, func);
 	}
 
 	Class* Parser::findClass(Node *parent, Str cls_nm) {

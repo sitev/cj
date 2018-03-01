@@ -6,6 +6,15 @@ namespace cj {
 
 	enum ExpType {etNone, etInteger, etString};
 
+	class VarDef : public lang::VarDef {
+	public:
+		bool isFrom = false;
+		Str file;
+	};
+
+	class FuncDefParam : public VarDef {
+	};
+
 	class FuncDef : public lang::FuncDef {
 	public:
 		bool isFrom = false;
@@ -93,8 +102,12 @@ namespace cj {
 		virtual void addNode(Node *parent, Node *node);
 		virtual VarDef* findVarDef(Node *parent, Str var);
 		virtual VarDef* findVarDefInParams(Node *parent, Str var);
+		virtual VarDef* findVarDefIntoClass(Node *parent, Str var);
+		virtual VarDef* findVarDefIntoVar(Var *var, Str vn);
+
 		virtual FuncDef* findFuncDef(Node *parent, Str func);
 		virtual FuncDef* findFuncDefIntoClass(Node *parent, Str func);
+		virtual FuncDef* findFuncDefIntoVar(Var *var, Str func);
 		virtual Class* findClass(Node *parent, Str clss_nm);
 	};
 

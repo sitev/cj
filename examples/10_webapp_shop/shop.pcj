@@ -1,5 +1,6 @@
 project = Project {
 	sources: [ "shop.cj" ],
 	includes: [],
+	namespace: "cms",
 	generator: CppGen
 }

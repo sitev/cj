@@ -151,7 +151,7 @@ namespace cj {
 		for (int i = 0; i < count; i++) {
 			Node *nd = node->nodes[i];
 			Str s2 = generate(nd);
-			if (s2 != "") s += getTab(1) + s2;
+			if (s2 != "") s += getTab(1, 1) + s2;
 		}
 
 		s += "}\r\n";

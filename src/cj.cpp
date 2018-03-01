@@ -36,14 +36,16 @@ int main(int argc, char* argv[])
 	Str s;
 	f.readAll(s);
 
-	Str sb = 
-		"int JsGen = 1;\n"
-		"int CppGen = 2;\n"
-		"Project{\n"
-		"	string sources[];\n"
-		"	string includes[];\n"
-		"	int generator;\n"
-		"}\n";
+	Str sb = R"(
+		int JsGen = 1;
+		int CppGen = 2;
+		Project{
+			string sources[];
+			string includes[];
+			string namespace;
+			int generator;
+		}
+	)";
 
 	s = sb + s;
 
@@ -52,7 +54,7 @@ int main(int argc, char* argv[])
 	s = parser->run(s);
 
 	vector<Str> sources, includes;
-	Str genName;
+	Str genName, namespce;
 
 	bool isProjectFound = false;
 	int count = parser->nodes.size();
@@ -88,7 +90,7 @@ int main(int argc, char* argv[])
 										}
 									}
 								}
-								if (var->def->name == "includes") {
+								else if (var->def->name == "includes") {
 									int count3 = node3->nodes.size();
 									for (int i = 0; i < count3; i++) {
 										Node *node4 = node3->nodes[i];
@@ -99,6 +101,24 @@ int main(int argc, char* argv[])
 												if (node5->nodeType == ntString) {
 													StringNode *sn = (StringNode*)node5;
 													includes.push_back(sn->value);
+												}
+											}
+										}
+									}
+								}
+								else if (var->def->name == "namespace") {
+									int count3 = node3->nodes.size();
+									for (int i = 0; i < count3; i++) {
+										Node *node4 = node3->nodes[i];
+										if (node4->nodeType == ntExpression) {
+											int count4 = node4->nodes.size();
+											if (count4 > 0) {
+												Node *node5 = node4->nodes[0];
+												if (node5->nodeType == ntString) {
+													StringNode *sn = (StringNode*)node5;
+													if (sn->value.length() >= 2) {
+														namespce = sn->value.substr(1, sn->value.length() - 2);
+													}
 												}
 											}
 										}
@@ -131,7 +151,7 @@ int main(int argc, char* argv[])
 		isProjectFound = false;
 
 		if (node->nodeType == ntVarDef) {
-			VarDef *vd = (VarDef*)node;
+			cj::VarDef *vd = (cj::VarDef*)node;
 			if (vd->name == "project") {
 				isProjectFound = true;
 			}
@@ -153,6 +173,7 @@ int main(int argc, char* argv[])
 		delete ff;
 	}
 	parser->run(s);
+	parser->out("c:/projects/cj/examples/10_webapp_shop/syntax_tree.txt");
 
 	int pos = fn.rfind(".");
 	fn = fn.substr(0, pos);
@@ -161,6 +182,7 @@ int main(int argc, char* argv[])
 	else if (genName == "CppGen") {
 		generator = new CppGen(parser, fn);
 		((CppGen*)generator)->setIncludes(includes);
+		((CppGen*)generator)->setNamespace(namespce);
 	}
 	else return -1;
 

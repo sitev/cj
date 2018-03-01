@@ -7,11 +7,15 @@ namespace cj {
 		CppGen(Parser *parser, Str fn);
 		~CppGen();
 		virtual void setIncludes(vector<Str> &includes);
+		virtual void setNamespace(Str namespce);
 	protected:
 		Str sCpp;
 		vector<Str> includes;
+		Str namespce;
+		vector<Str> froms;
 
 		virtual Str getHeader();
+		virtual Str getFooter();
 		virtual Str genNumber(Node *node);
 		virtual Str genString(Node *node);
 		virtual Str genVarDef(Node *node);
@@ -29,6 +33,7 @@ namespace cj {
 		virtual Str genClass(Node *node);
 		virtual Str genConstruct(Node *node);
 		virtual Str genCodeInsertion(Node *node);
+		virtual Str genType(Str type);
 	};
 
 }
