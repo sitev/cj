@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 	cout << "Cj 0.3" << endl;
 	if (argc < 2) {
 		cout << "Error. Missing source file. Example:" << endl;
-		cout << "cj source.cj" << endl;
+		cout << "cj source.pcj" << endl;
 		return 0;
 	}
 
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	Str sb = R"(
 		int JsGen = 1;
 		int CppGen = 2;
-		Project{
+		Project {
 			string sources[];
 			string includes[];
 			string namespace;
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 
 	s = "";
 	count = sources.size();
-	Str prefix = "c:/projects/cj/examples/10_webapp_shop/";
+	Str prefix = "C:\\projects\\cjso\\cj\\examples\\8_desktop_console\\";
 	for (int i = 0; i < count; i++) {
 		Str fileName = sources[i];
 		if (fileName < 2) return -1;
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 		delete ff;
 	}
 	parser->run(s);
-	parser->out("c:/projects/cj/examples/10_webapp_shop/syntax_tree.txt");
+	parser->out("C:\\projects\\cjso\\cj\\examples\\8_desktop_console/syntax_tree.txt");
 
 	int pos = fn.rfind(".");
 	fn = fn.substr(0, pos);

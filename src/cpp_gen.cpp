@@ -28,7 +28,15 @@ namespace cj {
 	void CppGen::setNamespace(Str namespce) {
 		this->namespce = namespce;
 		sCpp = "#include \"";
-		sCpp += namespce + ".h\"\n\n";
+		if (namespce != "") sCpp += namespce + ".h\"\n\n";
+		else {
+			Str s = fn;
+			int pos = s.rfind("\\");
+			if (pos < 0) pos = s.rfind("/");
+			if (pos > 0) s = s.substr(pos + 1);
+
+			sCpp += s + ".h\"\n\n";
+		}
 	}
 
 	Str CppGen::getHeader() {
@@ -39,15 +47,19 @@ namespace cj {
 			s += includes[i] + "\n";
 		}
 		if (count != 0) s += "\n";
-		if (namespce != "") s += (Str)"namespace " + namespce + " {\n";
-
-		sCpp += (Str)"namespace " + namespce + " {\n";
+		if (namespce != "") {
+			s += (Str)"namespace " + namespce + " {\n";
+			sCpp += (Str)"namespace " + namespce + " {\n";
+		}
 		return s;
 	}
 
 	Str CppGen::getFooter() {
-		sCpp += "\n}\n";
-		Str s = "\n}\n";
+		Str s;
+		if (namespce != "") {
+			sCpp += "\n}\n";
+			s = "\n}\n";
+		}
 		return s;
 	}
 
@@ -133,41 +145,44 @@ namespace cj {
 			return s;
 		}
 
+		bool outInHeader = true;
+		if (!fd->owner && fd->name == "main") outInHeader = false;
+
 		if (!fd->isConstruct) {
 			if (fd->clss) {
 				s += fd->clss->name + "* ";
 				sCpp += fd->clss->name + "* ";
 			}
 			else {
-				s += genType(fd->type) + " ";
+				if (outInHeader) s += genType(fd->type) + " ";
 				sCpp += genType(fd->type) + " ";
 			}
 		}
 		if (fd->owner) sCpp += fd->owner->name + "::";
-		s += fd->name + "(";
+		if (outInHeader) s += fd->name + "(";
 		sCpp += fd->name + "(";
 
 		int count = fd->params.size();
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
-			if (fdp->clss) s += fdp->clss->name + " *";
-			else s += genType(fdp->type) + " ";
-			if (fdp->isRef) s += "&";
-			s += fdp->name;
+			if (fdp->clss) if (outInHeader) s += fdp->clss->name + " *";
+			else if (outInHeader) s += genType(fdp->type) + " ";
+			if (fdp->isRef) if (outInHeader) s += "&";
+			if (outInHeader) s += fdp->name;
 
 			if (fdp->clss) sCpp += fdp->clss->name + " *";
 			else sCpp += genType(fdp->type) + " ";
 			if (fdp->isRef) sCpp += "&";
 			sCpp += fdp->name;
 			if (i + 1 != count) {
-				s += ", ";
+				if (outInHeader) s += ", ";
 				sCpp += ", ";
 			}
 		}
 
-		s += ")";
+		if (outInHeader) s += ")";
 		sCpp += ") ";
-		s += ";\n";
+		if (outInHeader) s += ";\n";
 
 		if (fd->isConstruct) {
 			if (fd->owner->parent) {

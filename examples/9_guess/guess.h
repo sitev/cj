@@ -12,4 +12,6 @@
 
 #include "myfuncs_cpp.h"
 
-int main() ;
+int main();
+
+}
