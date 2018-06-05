@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 	s = sb + s;
 
 	cj::Lexer *lexer = new cj::Lexer();       //s = lexer->run(s);
-	cj::Parser *parser = new cj::Parser(lexer);
+	cj::Parser *parser = new cj::Parser(lexer, 2);
 	s = parser->run(s);
 
 	vector<Str> sources, includes;

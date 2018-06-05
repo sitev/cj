@@ -42,7 +42,7 @@ namespace cj {
 
 	class Parser : public lang::Parser {
 	public:
-		Parser(lang::Lexer *lexer);
+		Parser(lang::Lexer *lexer, int nPass = 1);
 
 		virtual bool doMainCodeBlock();
 		virtual bool doCodeBlock(Node *parent);

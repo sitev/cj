@@ -29,7 +29,7 @@ namespace cj {
 
 	}
 
-	Parser::Parser(lang::Lexer *lexer) : lang::Parser(lexer) {
+	Parser::Parser(lang::Lexer *lexer, int nPass) : lang::Parser(lexer, nPass) {
 
 	}
 
