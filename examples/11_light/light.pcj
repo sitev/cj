@@ -1,0 +1,6 @@
+project = Project {
+	sources: [ "first.cj" ],
+	includes: [],
+	namespace: "",
+	generator: CppGen
+}

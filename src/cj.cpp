@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 
 	s = "";
 	count = sources.size();
-	Str prefix = "C:\\projects\\cjso\\cj\\examples\\8_desktop_console\\";
+	Str prefix = "C:\\projects\\cjso\\cj\\examples\\11_light\\";
 	for (int i = 0; i < count; i++) {
 		Str fileName = sources[i];
 		if (fileName < 2) return -1;
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 		delete ff;
 	}
 	parser->run(s);
-	parser->out("C:\\projects\\cjso\\cj\\examples\\8_desktop_console/syntax_tree.txt");
+	//parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
 	int pos = fn.rfind(".");
 	fn = fn.substr(0, pos);

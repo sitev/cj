@@ -42,7 +42,7 @@ namespace cj {
 
 	bool Parser::doCodeBlock(Node *parent) {
 		Node *node = new CodeBlock();
-		addNode(parent, node);
+		addOrTestNode(parent, node);
 		while (true) {
 			if (isSpecial("}")) return true;
 			if (doStatement(node)) continue;
@@ -82,9 +82,9 @@ namespace cj {
 			if (isSpecial("{")) return doClass(parent);
 			if (isOperator("from")) return doClass(parent, 1);
 			if (isSpecial(":"))	return doClass(parent, 2);
+			if (doUnknown(parent)) return true;
 			if (doVarDef(parent)) return true;
 			decPosition();
-			return doExpression(parent);
 		}
 
 		return doExpression(parent);
@@ -176,12 +176,12 @@ namespace cj {
 				FuncDef *fd = new FuncDef();
 				fd->name = identifier;
 				fd->type = "auto";
-				addNode(parent->parent, fd);
+				addOrTestNode(parent->parent, fd);
 			}
 
 			Func *func = new Func();
 			func->def = fd;
-			addNode(parent, func);
+			addOrTestNode(parent, func);
 			if (isSpecial(")")) return true;
 			while (true) {
 				if (doExpression(func)) {
@@ -216,7 +216,7 @@ namespace cj {
 				if (std_type == "") fd->type = "auto"; else fd->type = std_type;
 			}
 		}
-		addNode(parent, fd);
+		addOrTestNode(parent, fd);
 		if (!doFuncDefParams(fd)) return false;
 
 		if (fd->owner) {
@@ -298,44 +298,126 @@ namespace cj {
 	}
 
 	bool Parser::doVarDef(Node *parent) {
-		if (findVarDef(parent, identifier)) return false;
+		if (iPass == ptSingle) {
+			if (findVarDef(parent, identifier)) return false;
 
-		VarDef *vd = new VarDef();
-		vd->name = identifier;
-		if (clss) {
-			vd->clss = clss;
-		}
-		else {
-			if (std_type == "") vd->type = "auto"; else vd->type = std_type;
-		}
-		
-		addNode(parent, vd);
+			VarDef *vd = new VarDef();
+			vd->name = identifier;
+			if (clss) {
+				vd->clss = clss;
+			}
+			else {
+				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+			}
 
-		if (isSpecial("[")) {
-			if (!isSpecial("]")) return false;
-			vd->isArray = true;
-		}
-		else if (isSpecial("=")) {
-			Expression *exp = new Expression();
-			addNode(parent, exp);
+			addOrTestNode(parent, vd);
 
-			Var *var = new Var();
-			var->def = vd;
-			addNode(exp, var);
+			if (isSpecial("[")) {
+				if (!isSpecial("]")) return false;
+				vd->isArray = true;
+			}
+			else if (isSpecial("=")) {
+				Expression *exp = new Expression();
+				addOrTestNode(parent, exp);
 
-			ExpOper *oper = new ExpOper();
-			oper->name = "=";
-			oper->count = 2;
-			addNode(exp, oper);
+				Var *var = new Var();
+				var->def = vd;
+				addOrTestNode(exp, var);
 
-			return doExpression(exp, false);
+				ExpOper *oper = new ExpOper();
+				oper->name = "=";
+				oper->count = 2;
+				addOrTestNode(exp, oper);
+
+				return doExpression(exp, false);
+			}
+			if (isOperator("from")) {
+				vd->isFrom = true;
+				if (!isString()) return false;
+				vd->file = cur_string;
+			}
+			return isSpecial(";");
 		}
-		if (isOperator("from")) {
-			vd->isFrom = true;
-			if (!isString()) return false;
-			vd->file = cur_string;
+
+		if (iPass == ptLight) {
+			if (findVarDef(parent, identifier)) return false;
+
+			VarDef *vd = new VarDef();
+			vd->name = identifier;
+			if (clss) {
+				vd->clss = clss;
+			}
+			else {
+				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+			}
+
+			addOrTestNode(parent, vd);
+
+			if (isSpecial("[")) {
+				if (!isSpecial("]")) return false;
+				vd->isArray = true;
+			}
+			else if (isSpecial("=")) {
+				Expression *exp = new Expression();
+				addOrTestNode(parent, exp);
+
+				Var *var = new Var();
+				var->def = vd;
+				addOrTestNode(exp, var);
+
+				ExpOper *oper = new ExpOper();
+				oper->name = "=";
+				oper->count = 2;
+				addOrTestNode(exp, oper);
+
+				return doExpression(exp, false);
+			}
+			if (isOperator("from")) {
+				vd->isFrom = true;
+				if (!isString()) return false;
+				vd->file = cur_string;
+			}
+			return isSpecial(";");
 		}
-		return isSpecial(";");
+
+		if (iPass == ptMain) {
+			VarDef *vd = new VarDef();
+			vd->name = identifier;
+			if (clss) {
+				vd->clss = clss;
+			}
+			else {
+				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+			}
+
+			addOrTestNode(parent, vd);
+
+			if (isSpecial("[")) {
+				if (!isSpecial("]")) return false;
+				vd->isArray = true;
+			}
+			else if (isSpecial("=")) {
+				Expression *exp = new Expression();
+				exp = (Expression*)addOrTestNode(parent, exp);
+
+				Var *var = new Var();
+				var->def = vd;
+				addOrTestNode(exp, var);
+
+				ExpOper *oper = new ExpOper();
+				oper->name = "=";
+				oper->count = 2;
+				addOrTestNode(exp, oper);
+
+				return doExpression(exp, false);
+			}
+			if (isOperator("from")) {
+				vd->isFrom = true;
+				if (!isString()) return false;
+				vd->file = cur_string;
+			}
+			return isSpecial(";");
+		}
 	}
 
 	bool Parser::doVar(Node *parent) {
@@ -370,12 +452,12 @@ namespace cj {
 				vd = new VarDef();
 				vd->name = identifier;
 				vd->type = "auto";
-				addNode(parent->parent, vd);
+				addOrTestNode(parent->parent, vd);
 			}
 
 			Var *var = new Var();
 			var->def = vd;
-			addNode(parent, var);
+			addOrTestNode(parent, var);
 
 			//if (vd->clss) {
 			//	if (isSpecial(".")) {
@@ -413,7 +495,7 @@ namespace cj {
 
 		Construct *con = new Construct();
 		con->clss = clss;
-		addNode(parent, con);
+		addOrTestNode(parent, con);
 
 		if (isSpecial("}")) return true;
 		while (true) {
@@ -429,7 +511,7 @@ namespace cj {
 			//3. Создать переменную
 			Var *var = new Var();
 			var->def = vd;
-			addNode(con, var);
+			addOrTestNode(con, var);
 
 			//4. Вызвать функцию обработки инициализации свойства identifier
 			bool flag = doVarInit(var, vd);
@@ -463,17 +545,59 @@ namespace cj {
 		return false;
 	}
 
+	bool Parser::doUnknown(Node *parent) {
+		if (findVarDef(parent, identifier)) return false;
+		if (iPass != ptLight) return false;
+
+		Str type = identifier;
+		if (!isIdentifier()) return false;
+
+		VarDef *vd = new VarDef();
+		vd->name = identifier;
+		vd->isTypeUnknown = true;
+		vd->type = type;
+
+		addOrTestNode(parent, vd);
+
+		if (isSpecial("[")) {
+			if (!isSpecial("]")) return false;
+			vd->isArray = true;
+		}
+		else if (isSpecial("=")) {
+			Expression *exp = new Expression();
+			addOrTestNode(parent, exp);
+
+			Var *var = new Var();
+			var->def = vd;
+			addOrTestNode(exp, var);
+
+			ExpOper *oper = new ExpOper();
+			oper->name = "=";
+			oper->count = 2;
+			addOrTestNode(exp, oper);
+
+			return doExpression(exp, false);
+		}
+		if (isOperator("from")) {
+			vd->isFrom = true;
+			if (!isString()) return false;
+			vd->file = cur_string;
+		}
+		return isSpecial(";");
+
+	}
+
 	bool Parser::doNumber(Node *parent) {
 		Number *node = new Number();
 		node->value = number;
-		addNode(parent, node);
+		addOrTestNode(parent, node);
 		return true;
 	}
 
 	bool Parser::doString(Node *parent) {
 		StringNode *node = new StringNode();
 		node->value = cur_string;
-		addNode(parent, node);
+		addOrTestNode(parent, node);
 		return true;
 	}
 
@@ -489,7 +613,7 @@ namespace cj {
 		if (!isSpecial("(")) return false;
 		Operator *oper = new Operator();
 		oper->name = "if";
-		addNode(parent, oper);
+		addOrTestNode(parent, oper);
 		if (!doExpression(oper)) return false;
 		if (!isSpecial(")")) return false;
 		if (!doStatement(oper)) return false;
@@ -502,7 +626,7 @@ namespace cj {
 		if (!isSpecial("(")) return false;
 		Operator *oper = new Operator();
 		oper->name = "for";
-		addNode(parent, oper);
+		addOrTestNode(parent, oper);
 		if (!doExpression(oper)) return false;
 		if (!doExpression(oper)) return false;
 		if (!doExpression(oper)) return false;
@@ -515,7 +639,7 @@ namespace cj {
 		if (!isSpecial("(")) return false;
 		Operator *oper = new Operator();
 		oper->name = "while";
-		addNode(parent, oper);
+		addOrTestNode(parent, oper);
 		if (!doExpression(oper)) return false;
 		if (!isSpecial(")")) return false;
 		if (!doStatement(oper)) return false;
@@ -528,7 +652,7 @@ namespace cj {
 		FuncDef *fd = (FuncDef*)p;
 		Operator *oper = new Operator();
 		oper->name = "return";
-		addNode(parent, oper);
+		addOrTestNode(parent, oper);
 		if (fd->type != "void") {
 			if (doExpression(oper)) return true;
 		}
@@ -538,7 +662,7 @@ namespace cj {
 	bool Parser::doClass(Node *parent, uint flags) {
 		Class *clss = new Class();
 		clss->name = identifier;
-		addNode(parent, clss);
+		addOrTestNode(parent, clss);
 		if (flags == 1) {
 			clss->isFrom = true;
 			if (isString()) {
@@ -604,7 +728,7 @@ namespace cj {
 		Expression *expression = (Expression*)node;
 		if (isCreateExpressionNode) {
 			expression = new Expression();
-			addNode(node, expression);
+			addOrTestNode(node, expression);
 		}
 
 		bool flag = doUnaryOperator(expression);
@@ -654,7 +778,7 @@ namespace cj {
 			ExpOper *oper = new ExpOper();
 			oper->name = token.lexeme;
 			oper->count = 2;
-			addNode(parent, oper);
+			addOrTestNode(parent, oper);
 			return true;
 		}
 		return false;
@@ -667,7 +791,7 @@ namespace cj {
 				ExpOper *oper = new ExpOper();
 				oper->name = ari_opers[i];
 				oper->count = 2;
-				addNode(parent, oper);
+				addOrTestNode(parent, oper);
 
 				return true;
 			}
@@ -684,7 +808,7 @@ namespace cj {
 		else if (identifier == "js") ci->cit = ciJs;
 		else return false;
 
-		addNode(parent, ci);
+		addOrTestNode(parent, ci);
 
 		if (!isCodeInsertion()) return false;
 		ci->source = source;
@@ -832,11 +956,33 @@ namespace cj {
 		}
 	}
 
-	void Parser::addNode(Node *parent, Node *node) {
-		node->parent = parent;
+	Node* Parser::addOrTestNode(Node *parent, Node *node) {
+		if (iPass != ptMain) {
+			node->parent = parent;
 
-		if (parent == nullptr) nodes.insert(nodes.end(), node);
-		else parent->nodes.insert(parent->nodes.end(), node);
+			if (parent == nullptr) nodes.push_back(node);
+			else parent->nodes.push_back(node);
+
+			return node;
+		}
+
+		Node *nd;
+		if (parent == nullptr) {
+			nd = nodes[nodeCount];
+			nodeCount++;
+		}
+		else {
+			nd = parent->nodes[parent->nodeCount];
+			parent->nodeCount++;
+		}
+		bool flag = nd->compare(node);
+		delete node;
+		if (flag) return nd;
+		else return nullptr;
+	}
+
+	void Parser::testNode(Node *parent, Node *node) {
+
 	}
 
 	VarDef* Parser::findVarDef(Node *parent, Str var) {

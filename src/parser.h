@@ -59,6 +59,8 @@ namespace cj {
 		virtual bool doVar(Node *parent);
 		virtual bool doVarInit(Node *parent, VarDef *vd);
 
+		virtual bool doUnknown(Node *parent);
+
 		virtual bool doNumber(Node *parent);
 		virtual bool doString(Node *parent);
 
@@ -99,7 +101,8 @@ namespace cj {
 		Class *clss = nullptr;
 		int number;
 		lang::Token token;
-		virtual void addNode(Node *parent, Node *node);
+		virtual Node* addOrTestNode(Node *parent, Node *node);
+		virtual void testNode(Node *parent, Node *node);
 		virtual VarDef* findVarDef(Node *parent, Str var);
 		virtual VarDef* findVarDefInParams(Node *parent, Str var);
 		virtual VarDef* findVarDefIntoClass(Node *parent, Str var);
