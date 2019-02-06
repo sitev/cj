@@ -1,4 +1,9 @@
-MyClass1 my;
+MyClass my;
 
-MyClass1 {
+MyClass {
+}
+
+int main()
+{
+    return 0;
 }

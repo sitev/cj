@@ -359,7 +359,7 @@ namespace cj {
 			}
 			else if (isSpecial("=")) {
 				Expression *exp = new Expression();
-				addOrTestNode(parent, exp);
+				addOrTestNode(vd, exp);
 
 				Var *var = new Var();
 				var->def = vd;
@@ -381,7 +381,14 @@ namespace cj {
 		}
 
 		if (iPass == ptMain) {
-			VarDef *vd = new VarDef();
+			VarDef *vd;
+			int size = nodes.size();
+			if (parent == NULL) {
+				vd = (VarDef*)nodes[nodeCount];
+			}
+			else {
+				vd = (VarDef*)parent->nodes[parent->nodeCount];
+			}
 			vd->name = identifier;
 			if (clss) {
 				vd->clss = clss;
@@ -398,7 +405,7 @@ namespace cj {
 			}
 			else if (isSpecial("=")) {
 				Expression *exp = new Expression();
-				exp = (Expression*)addOrTestNode(parent, exp);
+				exp = (Expression*)addOrTestNode(vd, exp);
 
 				Var *var = new Var();
 				var->def = vd;
@@ -976,7 +983,7 @@ namespace cj {
 			parent->nodeCount++;
 		}
 		bool flag = nd->compare(node);
-		delete node;
+		//delete node;
 		if (flag) return nd;
 		else return nullptr;
 	}

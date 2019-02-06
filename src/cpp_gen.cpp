@@ -41,12 +41,26 @@ namespace cj {
 
 	Str CppGen::getHeader() {
 		Str s = "#pragma once\n\n";
+
 		int count = includes.size();
 		for (int i = 0; i < count; i++) {
 			s += "#include ";
 			s += includes[i] + "\n";
 		}
 		if (count != 0) s += "\n";
+
+		count = parser->nodes.size();
+		for (int i = 0; i < count; i++) {
+			Node *node = parser->nodes[i];
+
+			if (node->nodeType == ntClass) {
+				Class *clss = (Class*)node;
+				s += "class " + clss->name.to_string() + ";\n";
+			}
+		}
+		s += "\n";
+
+
 		if (namespce != "") {
 			s += (Str)"namespace " + namespce + " {\n";
 			sCpp += (Str)"namespace " + namespce + " {\n";

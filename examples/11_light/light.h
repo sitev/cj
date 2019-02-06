@@ -1,6 +1,8 @@
 #pragma once
 
-MyClass1 my;
-class MyClass1 {
+class MyClass;
+
+MyClass my;
+class MyClass {
 public:
 };

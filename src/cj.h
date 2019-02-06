@@ -4,3 +4,4 @@
 #include "parser.h"
 #include "js_gen.h"
 #include "cpp_gen.h"
+#include "as_gen.h"

@@ -2,12 +2,15 @@
 using namespace core;
 
 #include "lang.h"
-
 #include "cj.h"
 using namespace cj;
 
+#include "lua_wrap.h"
+
 #pragma comment( lib, "core.lib" )
 #pragma comment( lib, "lang.lib" )
+#pragma comment (lib, "lua51.lib")
+#pragma comment (lib, "lua_wrap.lib")
 
 int main(int argc, char* argv[])
 {
@@ -36,26 +39,64 @@ int main(int argc, char* argv[])
 	Str s;
 	f.readAll(s);
 
-	Str sb = R"(
-		int JsGen = 1;
-		int CppGen = 2;
-		Project {
-			string sources[];
-			string includes[];
-			string namespace;
-			int generator;
-		}
-	)";
+	Str sb = R"(int JsGen = 1;
+int CppGen = 2;
+int AsGen = 3;
+Project {
+	string sources[];
+	string includes[];
+	string namespace;
+	int generator;
+}
 
-	s = sb + s;
+)";
+
+	Str se = R"(
+
+void main() {
+
+}
+)";
+
+	s = sb + s + se;
+
 
 	cj::Lexer *lexer = new cj::Lexer();       //s = lexer->run(s);
 	cj::Parser *parser = new cj::Parser(lexer, 2);
 	s = parser->run(s);
+	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
+	Generator *pgen = new AsGen(parser, fn);
+	pgen->run();
+
+	/*
+	AngelScript as;
+//	as.regCppFunc("void print(const string &in)", asFUNCTION(print), asCALL_CDECL);
+	AngelScriptModule *mod = as.newModule("project_module", "C:\\projects\\cjso\\cj\\examples\\11_light\\test.pcj.as");
+	int cnt = mod->GetGlobalVarCount();
+	//AngelScript 
+	int idx = mod->GetGlobalVarIndexByName("project");
+	asIScriptObject *b = (asIScriptObject*)mod->GetAddressOfGlobalVar(idx);
+	int n = b->GetPropertyCount();
+	asIScriptObject *c = (asIScriptObject*)b->GetAddressOfProperty(2);
+	int nc = c->GetPropertyCount();
+	for (int i = 0; i < 6; i++) {
+		//int tp = b->GetPropertyTypeId(i);
+		char *v1 = (char*)b->GetAddressOfProperty(i);
+		char *v2 = (char*)b->GetUserData(i);
+		int aa = 0;
+	}
+
+
+
+
+	AngelScriptFunc *func = mod->getFunc("string get_str()");
+	as.exec(func);
+	*/
 	vector<Str> sources, includes;
 	Str genName, namespce;
 
+	/*
 	bool isProjectFound = false;
 	int count = parser->nodes.size();
 	for (int i = 0; i < count; i++) {
@@ -158,9 +199,10 @@ int main(int argc, char* argv[])
 			cout << vd->name.to_string() << endl;
 		}
 	}
+	*/
 
 	s = "";
-	count = sources.size();
+	int count = sources.size();
 	Str prefix = "C:\\projects\\cjso\\cj\\examples\\11_light\\";
 	for (int i = 0; i < count; i++) {
 		Str fileName = sources[i];
@@ -173,7 +215,7 @@ int main(int argc, char* argv[])
 		delete ff;
 	}
 	parser->run(s);
-	//parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
+	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
 	int pos = fn.rfind(".");
 	fn = fn.substr(0, pos);
