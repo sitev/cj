@@ -1,6 +1,9 @@
-#include "light.h"
+#include "test.h"
 
-int main() {
+namespace test {
+MyClass* main() {
 	return 0;
 }
 
+
+}

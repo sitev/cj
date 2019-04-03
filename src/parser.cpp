@@ -72,9 +72,16 @@ namespace cj {
 		}
 		
 		if (isClass()) {
-			if (!isIdentifier()) return false;
-			if (isSpecial("(")) return doFuncDef(parent);
-			return doVarDef(parent);
+			if (isIdentifier()) {
+				if (isSpecial("(")) return doFuncDef(parent);
+				return doVarDef(parent);
+			}
+			else {
+				/*if (isSpecial("{")) {
+					return doClass(parent);
+				}*/
+				return false;
+			}
 		}
 
 		if (isIdentifier()) {
@@ -297,134 +304,147 @@ namespace cj {
 		return doCodeBlock(parent);
 	}
 
+	bool Parser::doVarDefPassSingle(Node *parent) {
+		if (findVarDef(parent, identifier)) return false;
+
+		VarDef *vd = new VarDef();
+		vd->name = identifier;
+		if (clss) {
+			vd->clss = clss;
+		}
+		else {
+			if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+		}
+
+		addOrTestNode(parent, vd);
+
+		if (isSpecial("[")) {
+			if (!isSpecial("]")) return false;
+			vd->isArray = true;
+		}
+		else if (isSpecial("=")) {
+			Expression *exp = new Expression();
+			addOrTestNode(parent, exp);
+
+			Var *var = new Var();
+			var->def = vd;
+			addOrTestNode(exp, var);
+
+			ExpOper *oper = new ExpOper();
+			oper->name = "=";
+			oper->count = 2;
+			addOrTestNode(exp, oper);
+
+			return doExpression(exp, false);
+		}
+		if (isOperator("from")) {
+			vd->isFrom = true;
+			if (!isString()) return false;
+			vd->file = cur_string;
+		}
+		return isSpecial(";");
+	}
+
+	bool Parser::doVarDefPassLight(Node *parent) {
+		if (findVarDef(parent, identifier)) return false;
+
+		VarDef *vd = new VarDef();
+		vd->name = identifier;
+
+		NodeType nt = ntNone;
+		if (parent)	nt = parent->nodeType;
+		if (nt == ntClass) {
+			if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+		}
+		else {
+			if (clss) {
+				vd->clss = clss;
+			}
+			else {
+				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+			}
+		}
+
+
+		addOrTestNode(parent, vd);
+
+		if (isSpecial("[")) {
+			if (!isSpecial("]")) return false;
+			vd->isArray = true;
+		}
+		else if (isSpecial("=")) {
+			Expression *exp = new Expression();
+			addOrTestNode(vd, exp);
+
+			Var *var = new Var();
+			var->def = vd;
+			addOrTestNode(exp, var);
+
+			ExpOper *oper = new ExpOper();
+			oper->name = "=";
+			oper->count = 2;
+			addOrTestNode(exp, oper);
+
+			return doExpression(exp, false);
+		}
+		if (isOperator("from")) {
+			vd->isFrom = true;
+			if (!isString()) return false;
+			vd->file = cur_string;
+		}
+		return isSpecial(";");
+	}
+
+	bool Parser::doVarDefPassMain(Node *parent) {
+		VarDef *vd;
+		int size = nodes.size();
+		if (parent == NULL) {
+			vd = (VarDef*)nodes[nodeCount];
+		}
+		else {
+			vd = (VarDef*)parent->nodes[parent->nodeCount];
+		}
+		vd->name = identifier;
+		if (clss) {
+			vd->clss = clss;
+		}
+		else {
+			if (std_type == "") vd->type = "auto"; else vd->type = std_type;
+		}
+
+		addOrTestNode(parent, vd);
+
+		if (isSpecial("[")) {
+			if (!isSpecial("]")) return false;
+			vd->isArray = true;
+		}
+		else if (isSpecial("=")) {
+			Expression *exp = new Expression();
+			exp = (Expression*)addOrTestNode(vd, exp);
+
+			Var *var = new Var();
+			var->def = vd;
+			addOrTestNode(exp, var);
+
+			ExpOper *oper = new ExpOper();
+			oper->name = "=";
+			oper->count = 2;
+			addOrTestNode(exp, oper);
+
+			return doExpression(exp, false);
+		}
+		if (isOperator("from")) {
+			vd->isFrom = true;
+			if (!isString()) return false;
+			vd->file = cur_string;
+		}
+		return isSpecial(";");
+	}
+
 	bool Parser::doVarDef(Node *parent) {
-		if (iPass == ptSingle) {
-			if (findVarDef(parent, identifier)) return false;
-
-			VarDef *vd = new VarDef();
-			vd->name = identifier;
-			if (clss) {
-				vd->clss = clss;
-			}
-			else {
-				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
-			}
-
-			addOrTestNode(parent, vd);
-
-			if (isSpecial("[")) {
-				if (!isSpecial("]")) return false;
-				vd->isArray = true;
-			}
-			else if (isSpecial("=")) {
-				Expression *exp = new Expression();
-				addOrTestNode(parent, exp);
-
-				Var *var = new Var();
-				var->def = vd;
-				addOrTestNode(exp, var);
-
-				ExpOper *oper = new ExpOper();
-				oper->name = "=";
-				oper->count = 2;
-				addOrTestNode(exp, oper);
-
-				return doExpression(exp, false);
-			}
-			if (isOperator("from")) {
-				vd->isFrom = true;
-				if (!isString()) return false;
-				vd->file = cur_string;
-			}
-			return isSpecial(";");
-		}
-
-		if (iPass == ptLight) {
-			if (findVarDef(parent, identifier)) return false;
-
-			VarDef *vd = new VarDef();
-			vd->name = identifier;
-			if (clss) {
-				vd->clss = clss;
-			}
-			else {
-				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
-			}
-
-			addOrTestNode(parent, vd);
-
-			if (isSpecial("[")) {
-				if (!isSpecial("]")) return false;
-				vd->isArray = true;
-			}
-			else if (isSpecial("=")) {
-				Expression *exp = new Expression();
-				addOrTestNode(vd, exp);
-
-				Var *var = new Var();
-				var->def = vd;
-				addOrTestNode(exp, var);
-
-				ExpOper *oper = new ExpOper();
-				oper->name = "=";
-				oper->count = 2;
-				addOrTestNode(exp, oper);
-
-				return doExpression(exp, false);
-			}
-			if (isOperator("from")) {
-				vd->isFrom = true;
-				if (!isString()) return false;
-				vd->file = cur_string;
-			}
-			return isSpecial(";");
-		}
-
-		if (iPass == ptMain) {
-			VarDef *vd;
-			int size = nodes.size();
-			if (parent == NULL) {
-				vd = (VarDef*)nodes[nodeCount];
-			}
-			else {
-				vd = (VarDef*)parent->nodes[parent->nodeCount];
-			}
-			vd->name = identifier;
-			if (clss) {
-				vd->clss = clss;
-			}
-			else {
-				if (std_type == "") vd->type = "auto"; else vd->type = std_type;
-			}
-
-			addOrTestNode(parent, vd);
-
-			if (isSpecial("[")) {
-				if (!isSpecial("]")) return false;
-				vd->isArray = true;
-			}
-			else if (isSpecial("=")) {
-				Expression *exp = new Expression();
-				exp = (Expression*)addOrTestNode(vd, exp);
-
-				Var *var = new Var();
-				var->def = vd;
-				addOrTestNode(exp, var);
-
-				ExpOper *oper = new ExpOper();
-				oper->name = "=";
-				oper->count = 2;
-				addOrTestNode(exp, oper);
-
-				return doExpression(exp, false);
-			}
-			if (isOperator("from")) {
-				vd->isFrom = true;
-				if (!isString()) return false;
-				vd->file = cur_string;
-			}
-			return isSpecial(";");
-		}
+		if (iPass == ptSingle) return doVarDefPassSingle(parent);
+		if (iPass == ptLight) return doVarDefPassLight(parent);
+		if (iPass == ptMain) return doVarDefPassMain(parent);
 	}
 
 	bool Parser::doVar(Node *parent) {
@@ -459,7 +479,7 @@ namespace cj {
 				vd = new VarDef();
 				vd->name = identifier;
 				vd->type = "auto";
-				addOrTestNode(parent->parent, vd);
+				/*addOrTestNode(parent->parent, vd);*/
 			}
 
 			Var *var = new Var();
@@ -666,8 +686,9 @@ namespace cj {
 		return isSpecial(";");
 	}
 
-	bool Parser::doClass(Node *parent, uint flags) {
+	bool Parser::doClassPassSingle(Node *parent, uint flags) {
 		Class *clss = new Class();
+		this->clss = clss;
 		clss->name = identifier;
 		addOrTestNode(parent, clss);
 		if (flags == 1) {
@@ -725,6 +746,78 @@ namespace cj {
 			}
 		}
 		return false;
+	}
+
+	bool Parser::doClassPassLight(Node *parent, uint flags) {
+		Class *clss = new Class();
+		this->clss = clss;
+		clss->name = identifier;
+		addOrTestNode(parent, clss);
+		if (flags == 1) {
+			clss->isFrom = true;
+			if (isString()) {
+				if (isSpecial("{")) clss->file = cur_string;
+				else return false;
+			}
+			else return false;
+		}
+		else if (flags == 2) {
+			if (isIdentifier()) {
+				Class *clss2 = findClass(nullptr, identifier);
+				if (!clss2) return false;
+				if (isSpecial("{")) clss->file = cur_string;
+				else return false;
+				clss->parent = clss2;
+			}
+			else return false;
+		}
+		while (true) {
+			if (isSpecial("}")) return true;
+
+			if (isSpecial("@")) {
+				bool flag = doCodeInsertion(clss);
+				if (!flag) return false;
+			}
+			else if (isStdType()) {
+				if (!isIdentifier()) return false;
+				if (isSpecial("(")) {
+					bool flag = doFuncDef(clss);
+					if (!flag) return false;
+				}
+				else {
+					bool flag = doVarDef(clss);
+					if (!flag) return false;
+				}
+			}
+			else {
+				if (!isIdentifier()) return false;
+				if (isSpecial("(")) {
+					bool flag = doFuncDef(clss);
+					if (!flag) return false;
+				}
+				else {
+					Class *clss2 = findClass(nullptr, identifier);
+					if (clss2) {
+						//если это класс, то тут возможна обработка описания функции или перепенной
+					}
+					else {
+						bool flag = doVarDef(clss);
+						if (!flag) return false;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	bool Parser::doClassPassMain(Node *parent, uint flags) {
+		return true;
+	}
+
+	bool Parser::doClass(Node *parent, uint flags) {
+		if (iPass == ptSingle) return doClassPassSingle(parent, flags);
+		if (iPass == ptLight) return doClassPassLight(parent, flags);
+		return doClassPassMain(parent, flags);
 	}
 
 
@@ -813,6 +906,7 @@ namespace cj {
 		if (identifier == "cpp") ci->cit = ciCpp;
 		else if (identifier == "cpph") ci->cit = ciCpph;
 		else if (identifier == "js") ci->cit = ciJs;
+		else if (identifier == "lua") ci->cit = ciLua;
 		else return false;
 
 		addOrTestNode(parent, ci);
@@ -963,6 +1057,7 @@ namespace cj {
 		}
 	}
 
+	//Добавить узел в синтактическое дерево или (если оно есть уже там) протестировать этот узел
 	Node* Parser::addOrTestNode(Node *parent, Node *node) {
 		if (iPass != ptMain) {
 			node->parent = parent;

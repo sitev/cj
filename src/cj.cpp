@@ -9,12 +9,12 @@ using namespace cj;
 
 #pragma comment( lib, "core.lib" )
 #pragma comment( lib, "lang.lib" )
-#pragma comment (lib, "lua51.lib")
+#pragma comment (lib, "lua53.lib")
 #pragma comment (lib, "lua_wrap.lib")
 
 int main(int argc, char* argv[])
 {
-	cout << "Cj 0.3" << endl;
+	cout << "Cj " << CJ_VERSION << endl;
 	if (argc < 2) {
 		cout << "Error. Missing source file. Example:" << endl;
 		cout << "cj source.pcj" << endl;
@@ -39,9 +39,13 @@ int main(int argc, char* argv[])
 	Str s;
 	f.readAll(s);
 
-	Str sb = R"(int JsGen = 1;
-int CppGen = 2;
-int AsGen = 3;
+	Str sb = R"(
+
+	int JsGen = 1;
+	int CppGen = 2;
+	int AsGen = 3;
+	int LuaGen = 4;
+
 Project {
 	string sources[];
 	string includes[];
@@ -51,14 +55,18 @@ Project {
 
 )";
 
+
 	Str se = R"(
 
-void main() {
-
+void echo(s) {
+	@lua {
+	print(s);
+	}
 }
 )";
 
 	s = sb + s + se;
+	cout << s.to_string() << endl;
 
 
 	cj::Lexer *lexer = new cj::Lexer();       //s = lexer->run(s);
@@ -66,148 +74,36 @@ void main() {
 	s = parser->run(s);
 	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
-	Generator *pgen = new AsGen(parser, fn);
+	Generator *pgen = new LuaGen(parser, fn);
 	pgen->run();
 
-	/*
-	AngelScript as;
-//	as.regCppFunc("void print(const string &in)", asFUNCTION(print), asCALL_CDECL);
-	AngelScriptModule *mod = as.newModule("project_module", "C:\\projects\\cjso\\cj\\examples\\11_light\\test.pcj.as");
-	int cnt = mod->GetGlobalVarCount();
-	//AngelScript 
-	int idx = mod->GetGlobalVarIndexByName("project");
-	asIScriptObject *b = (asIScriptObject*)mod->GetAddressOfGlobalVar(idx);
-	int n = b->GetPropertyCount();
-	asIScriptObject *c = (asIScriptObject*)b->GetAddressOfProperty(2);
-	int nc = c->GetPropertyCount();
-	for (int i = 0; i < 6; i++) {
-		//int tp = b->GetPropertyTypeId(i);
-		char *v1 = (char*)b->GetAddressOfProperty(i);
-		char *v2 = (char*)b->GetUserData(i);
-		int aa = 0;
-	}
+	Lua lua;
+	int result = lua.open((fn + ".lua").to_string());
 
-
-
-
-	AngelScriptFunc *func = mod->getFunc("string get_str()");
-	as.exec(func);
-	*/
 	vector<Str> sources, includes;
-	Str genName, namespce;
-
-	/*
-	bool isProjectFound = false;
-	int count = parser->nodes.size();
-	for (int i = 0; i < count; i++) {
-		Node *node = parser->nodes[i];
-		cout << node->nodeType << endl;
-
-		if (isProjectFound) {
-			if (node->nodeType == ntExpression) {
-				int count1 = node->nodes.size();
-				if (count1 == 3) {
-					Node *node2 = node->nodes[2];
-					if (node2->nodeType == ntConstruct) {
-						int count2 = node2->nodes.size();
-
-						for (int i = 0; i < count2; i++) {
-							Node *node3 = node2->nodes[i];
-							if (node3->nodeType == ntVar) {
-								Var *var = (Var*)node3;
-								if (var->def->name == "sources") {
-									int count3 = node3->nodes.size();
-									for (int i = 0; i < count3; i++) {
-										Node *node4 = node3->nodes[i];
-										if (node4->nodeType == ntExpression) {
-											int count4 = node4->nodes.size();
-											if (count4 > 0) {
-												Node *node5 = node4->nodes[0];
-												if (node5->nodeType == ntString) {
-													StringNode *sn = (StringNode*)node5;
-													sources.push_back(sn->value);
-												}
-											}
-										}
-									}
-								}
-								else if (var->def->name == "includes") {
-									int count3 = node3->nodes.size();
-									for (int i = 0; i < count3; i++) {
-										Node *node4 = node3->nodes[i];
-										if (node4->nodeType == ntExpression) {
-											int count4 = node4->nodes.size();
-											if (count4 > 0) {
-												Node *node5 = node4->nodes[0];
-												if (node5->nodeType == ntString) {
-													StringNode *sn = (StringNode*)node5;
-													includes.push_back(sn->value);
-												}
-											}
-										}
-									}
-								}
-								else if (var->def->name == "namespace") {
-									int count3 = node3->nodes.size();
-									for (int i = 0; i < count3; i++) {
-										Node *node4 = node3->nodes[i];
-										if (node4->nodeType == ntExpression) {
-											int count4 = node4->nodes.size();
-											if (count4 > 0) {
-												Node *node5 = node4->nodes[0];
-												if (node5->nodeType == ntString) {
-													StringNode *sn = (StringNode*)node5;
-													if (sn->value.length() >= 2) {
-														namespce = sn->value.substr(1, sn->value.length() - 2);
-													}
-												}
-											}
-										}
-									}
-								}
-								else if (var->def->name == "generator") {
-									int count3 = node3->nodes.size();
-									for (int i = 0; i < count3; i++) {
-										Node *node4 = node3->nodes[i];
-										if (node4->nodeType == ntExpression) {
-											int count4 = node4->nodes.size();
-											if (count4 > 0) {
-												Node *node5 = node4->nodes[0];
-												if (node5->nodeType == ntVar) {
-													Var *var = (Var*)node5;
-													genName = var->def->name;
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-
-					}
-				}
-			}
-		}
-
-		isProjectFound = false;
-
-		if (node->nodeType == ntVarDef) {
-			cj::VarDef *vd = (cj::VarDef*)node;
-			if (vd->name == "project") {
-				isProjectFound = true;
-			}
-			cout << vd->name.to_string() << endl;
-		}
+	auto project = lua.get("project");
+	auto srcs = project["sources"];
+	for (int i = 0; i < srcs.length(); i++) {
+		string s = srcs[i + 1];
+		sources.push_back(s);
 	}
-	*/
+	auto incs = project["includes"];
+	for (int i = 0; i < incs.length(); i++) {
+		string s = incs[i + 1];
+		includes.push_back(s);
+	}
+	
+	Str namespce = project["m_namespace"].cast<string>();
+	GeneratorType gt = (GeneratorType)project["generator"].cast<int>();
 
+	int pos = fn.rfind("\\");
+	Str prefix = fn.substr(0, pos + 1); //"C:\\projects\\cjso\\cj\\examples\\11_light\\";
 	s = "";
 	int count = sources.size();
-	Str prefix = "C:\\projects\\cjso\\cj\\examples\\11_light\\";
 	for (int i = 0; i < count; i++) {
 		Str fileName = sources[i];
 		if (fileName < 2) return -1;
-		fileName = prefix + fileName.substr(1, fileName.length() - 2);
+		fileName = prefix + fileName;
 		File *ff = new File(fileName.to_string(), "rb");
 		Str sf;
 		ff->readAll(sf);
@@ -217,16 +113,19 @@ void main() {
 	parser->run(s);
 	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
-	int pos = fn.rfind(".");
-	fn = fn.substr(0, pos);
+	int pfn = fn.rfind(".");
+	fn = fn.substr(0, pfn);
 	Generator *generator;
-	if (genName == "JsGen") generator = new JsGen(parser, fn);
-	else if (genName == "CppGen") {
-		generator = new CppGen(parser, fn);
-		((CppGen*)generator)->setIncludes(includes);
-		((CppGen*)generator)->setNamespace(namespce);
+	switch (gt) {
+		case gtJsGen: generator = new JsGen(parser, fn); break;
+		case gtCppGen:  
+			generator = new CppGen(parser, fn);
+			((CppGen*)generator)->setIncludes(includes);
+			((CppGen*)generator)->setNamespace(namespce);
+			break;
+		default:
+			return -1;
 	}
-	else return -1;
 
 	generator->run();
 

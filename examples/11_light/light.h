@@ -2,7 +2,10 @@
 
 class MyClass;
 
-MyClass my;
+namespace test {
+MyClass *my;
 class MyClass {
 public:
 };
+MyClass* 
+}

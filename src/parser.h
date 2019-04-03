@@ -30,7 +30,7 @@ namespace cj {
 		Class();
 	};
 
-	enum CodeInsertionType {ciNone, ciCpp, ciCpph, ciJs};
+	enum CodeInsertionType {ciNone, ciCpp, ciCpph, ciJs, ciLua};
 
 	class CodeInsertion : public lang::CodeInsertion {
 	public:
@@ -55,7 +55,11 @@ namespace cj {
 		virtual bool doFuncDefParams(FuncDef *fd);
 		virtual bool doFuncDefBody(Node *parent);
 
+		virtual bool doVarDefPassSingle(Node *parent);
+		virtual bool doVarDefPassLight(Node *parent);
+		virtual bool doVarDefPassMain(Node *parent);
 		virtual bool doVarDef(Node *parent);
+
 		virtual bool doVar(Node *parent);
 		virtual bool doVarInit(Node *parent, VarDef *vd);
 
@@ -70,7 +74,11 @@ namespace cj {
 		virtual bool doOperatorWhile(Node *parent);
 		virtual bool doOperatorReturn(Node *parent);
 		
+		virtual bool doClassPassSingle(Node *parent, uint flags);
+		virtual bool doClassPassLight(Node *parent, uint flags);
+		virtual bool doClassPassMain(Node *parent, uint flags);
 		virtual bool doClass(Node *parent, uint flags = 0);
+
 		virtual bool doConstruct(Node *parent);
 
 

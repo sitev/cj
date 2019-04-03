@@ -1,4 +1,3 @@
-
 #include "lang.h"
 using namespace lang;
 
