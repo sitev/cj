@@ -30,7 +30,11 @@ namespace cj {
 	}
 
 	Parser::Parser(lang::Lexer *lexer, int nPass) : lang::Parser(lexer, nPass) {
+	}
 
+	void Parser::clear() {
+		lang::Parser::clear();
+		clss = nullptr;
 	}
 
 	bool Parser::doMainCodeBlock() {
@@ -39,6 +43,9 @@ namespace cj {
 			return false;
 		}
 	}
+
+	/*bool Parser::doCodeBlockPassMain(Node *parent) {
+	}*/
 
 	bool Parser::doCodeBlock(Node *parent) {
 		Node *node = new CodeBlock();
@@ -201,7 +208,13 @@ namespace cj {
 		return true;
 	}
 
+	bool Parser::doFuncDefPassMain(Node *parent, bool isFrom) {
+		return false;
+	}
+
 	bool Parser::doFuncDef(Node *parent, bool isFrom) {
+		//if (iPass == ptMain) return doFuncDefPassMain(parent, isFrom);
+
 		FuncDef *fd = new FuncDef();
 		fd->name = identifier;
 		if (parent) {
@@ -1068,15 +1081,20 @@ namespace cj {
 			return node;
 		}
 
-		Node *nd;
+		Node *nd = nullptr;
 		if (parent == nullptr) {
 			nd = nodes[nodeCount];
 			nodeCount++;
 		}
 		else {
-			nd = parent->nodes[parent->nodeCount];
-			parent->nodeCount++;
+			if (parent->nodes.size() > parent->nodeCount) {
+				nd = parent->nodes[parent->nodeCount];
+				parent->nodeCount++;
+			}
 		}
+
+		if (!nd) return nullptr;
+
 		bool flag = nd->compare(node);
 		//delete node;
 		if (flag) return nd;

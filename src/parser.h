@@ -41,16 +41,20 @@ namespace cj {
 
 
 	class Parser : public lang::Parser {
+	protected:
+		virtual void clear();
 	public:
 		Parser(lang::Lexer *lexer, int nPass = 1);
 
 		virtual bool doMainCodeBlock();
+		//virtual bool doCodeBlockPassMain(Node *parent);
 		virtual bool doCodeBlock(Node *parent);
 		virtual bool doMainStatement(Node *parent);
 		virtual bool doStatement(Node *parent);
 
 		virtual bool doFunc(Node *parent);
 		virtual bool doFuncCall(Node *parent);
+		virtual bool doFuncDefPassMain(Node *parent, bool isFrom = true);
 		virtual bool doFuncDef(Node *parent, bool isFrom = true);
 		virtual bool doFuncDefParams(FuncDef *fd);
 		virtual bool doFuncDefBody(Node *parent);

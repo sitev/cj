@@ -277,6 +277,7 @@ namespace cj {
 	}
 
 	Str CppGen::genOperatorReturn(Operator *oper) {
+		wasReturn = true;
 		Str s = oper->name + " ";
 		int count = oper->nodes.size();
 		if (count > 0) s += generate(oper->nodes[0]); else s += ";\r\n";
@@ -310,6 +311,7 @@ namespace cj {
 
 	Str CppGen::genCodeBlock(Node *node) {
 		sCpp += "{\n";
+		wasReturn = false;
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
@@ -318,6 +320,12 @@ namespace cj {
 			if (s2 != "") sCpp += getTab(1, 3) + s2;
 		}
 
+		if (node->parent) {
+			if (node->parent->nodeType == ntFuncDef) {
+				FuncDef *fd = (FuncDef*)node->parent;
+				if (fd->type != "void" && !wasReturn) sCpp += getTab(1, 1) + "return 0;\n";
+			}
+		}
 		sCpp += "}\n\n";
 		return "";
 	}

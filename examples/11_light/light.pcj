@@ -1,6 +1,6 @@
 project = Project {
-	sources: [ "first.cj" ],
+	sources: [ "main.cj" ],
 	includes: [],
-	namespace: "test",
+	namespace: "",
 	generator: CppGen
 }

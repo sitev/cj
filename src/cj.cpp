@@ -57,13 +57,13 @@ Project {
 
 
 	Str se = R"(
-
-void echo(s) {
-	@lua {
-	print(s);
-	}
-}
 )";
+/*	void echo(s) {
+		@lua {
+			print(s);
+		}
+	}*/
+
 
 	s = sb + s + se;
 	cout << s.to_string() << endl;

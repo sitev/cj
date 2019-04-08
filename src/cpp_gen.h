@@ -13,6 +13,7 @@ namespace cj {
 		vector<Str> includes;
 		Str namespce;
 		vector<Str> froms;
+		bool wasReturn = false;
 
 		virtual Str getHeader();
 		virtual Str getFooter();
