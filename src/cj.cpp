@@ -14,37 +14,23 @@ using namespace cj;
 
 int main(int argc, char* argv[])
 {
-	cout << "Cj " << CJ_VERSION << endl;
+	cout << "Cj " << CJ_VERSION << endl << "----------" << endl;
 	if (argc < 2) {
 		cout << "Error. Missing source file. Example:" << endl;
 		cout << "cj source.pcj" << endl;
 		return 0;
 	}
 
-
-	/*
-	Так видится будущее:
-	1. парсим файл проектов
-	2. запускаем некий интерпритатор
-	...
-
-	На данный момент
-	1. парсим файл проектов
-	2. поиск нужных полей
-	...
-	*/
 	Str fn = argv[1];
 
 	File f(fn.to_string(), "rb");
 	Str s;
 	f.readAll(s);
 
-	Str sb = R"(
-
-	int JsGen = 1;
-	int CppGen = 2;
-	int AsGen = 3;
-	int LuaGen = 4;
+	Str sb = R"(int JsGen = 1;
+int CppGen = 2;
+int AsGen = 3;
+int LuaGen = 4;
 
 Project {
 	string sources[];
@@ -58,21 +44,14 @@ Project {
 
 	Str se = R"(
 )";
-/*	void echo(s) {
-		@lua {
-			print(s);
-		}
-	}*/
-
 
 	s = sb + s + se;
 	cout << s.to_string() << endl;
 
-
 	cj::Lexer *lexer = new cj::Lexer();       //s = lexer->run(s);
 	cj::Parser *parser = new cj::Parser(lexer, 2);
 	s = parser->run(s);
-	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
+	//parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
 
 	Generator *pgen = new LuaGen(parser, fn);
 	pgen->run();
@@ -94,10 +73,10 @@ Project {
 	}
 	
 	Str namespce = project["m_namespace"].cast<string>();
-	GeneratorType gt = (GeneratorType)project["generator"].cast<int>();
+	GeneratorType genType = (GeneratorType)project["generator"].cast<int>();
 
 	int pos = fn.rfind("\\");
-	Str prefix = fn.substr(0, pos + 1); //"C:\\projects\\cjso\\cj\\examples\\11_light\\";
+	Str prefix = fn.substr(0, pos + 1);
 	s = "";
 	int count = sources.size();
 	for (int i = 0; i < count; i++) {
@@ -111,12 +90,12 @@ Project {
 		delete ff;
 	}
 	parser->run(s);
-	parser->out("C:\\projects\\cjso\\cj\\examples\\11_light\\syntax_tree.txt");
+	parser->out(prefix + "syntax_tree.txt");
 
 	int pfn = fn.rfind(".");
 	fn = fn.substr(0, pfn);
 	Generator *generator;
-	switch (gt) {
+	switch (genType) {
 		case gtJsGen: generator = new JsGen(parser, fn); break;
 		case gtCppGen:  
 			generator = new CppGen(parser, fn);
