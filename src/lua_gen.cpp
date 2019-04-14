@@ -12,6 +12,14 @@ namespace cj {
 
 	}
 
+	Str LuaGen::genRemmark(Node *node) {
+		Remmark *rem = (Remmark*)node;
+		Str s = rem->value;
+		if (rem->isMultiLine) s = (Str)"--[[" + s + "]]";
+		else s = (Str)"--" + s;
+		return s + "\n";
+	}
+
 	Str LuaGen::genNumber(Node *node) {
 		Number *num = (Number*)node;
 		Str s = to_string(num->value);

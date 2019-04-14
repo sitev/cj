@@ -1,3 +1,6 @@
+/* remmark */
+// remmark
+
 int main()
 {
 }

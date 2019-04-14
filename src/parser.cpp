@@ -47,6 +47,14 @@ namespace cj {
 	/*bool Parser::doCodeBlockPassMain(Node *parent) {
 	}*/
 
+	bool Parser::doRemmark(Node *parent) {
+		Remmark *rem = new Remmark();
+		rem->value = remmark;
+		rem->isMultiLine = isRemmarkMultiLine;
+		addOrTestNode(parent, rem);
+		return true;
+	}
+
 	bool Parser::doCodeBlock(Node *parent) {
 		Node *node = new CodeBlock();
 		addOrTestNode(parent, node);
@@ -60,6 +68,9 @@ namespace cj {
 	bool Parser::doMainStatement(Node *parent) {
 		if (isEof()) return false;
 		if (isSpecial(";")) return true;
+		if (isRemmark()) {
+			return doRemmark(parent);
+		}
 		if (isSpecial("{")) {
 			return doCodeBlock(parent);
 		}
@@ -1038,6 +1049,25 @@ namespace cj {
 
 		rollback();
 		return false;
+	}
+
+	bool Parser::isRemmark() {
+		savePosition();
+		token = getToken();
+		if (token.type == ltRemmark) {
+			remmark = token.lexeme;
+			isRemmarkMultiLine = true;
+			return true;
+		}
+		if (token.type == ltRemmark2) {
+			remmark = token.lexeme;
+			isRemmarkMultiLine = false;
+			return true;
+		}
+
+		rollback();
+		return false;
+
 	}
 
 	bool Parser::isCodeInsertion() {

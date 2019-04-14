@@ -77,6 +77,20 @@ namespace cj {
 		return s;
 	}
 
+	Str CppGen::genRemmark(Node *node) {
+		Remmark *rem = (Remmark*)node;
+		Str s = rem->value;
+		if (rem->isMultiLine) {
+			sCpp = (Str)"/*" + s + "*/\n";
+			s = (Str)"/*" + s + "*/\n";
+		}
+		else {
+			sCpp = (Str)"//" + s + "\n";
+			s = (Str)"//" + s + "\n";
+		}
+		return s;
+	}
+
 	Str CppGen::genNumber(Node *node) {
 		Number *num = (Number*)node;
 		Str s = to_string(num->value);

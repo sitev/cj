@@ -8,6 +8,7 @@ namespace cj {
 		~JsGen();
 
 	protected:
+		virtual Str genRemmark(Node *node);
 		virtual Str genNumber(Node *node);
 		virtual Str genVarDef(Node *node);
 		virtual Str genVar(Node *node);

@@ -14,6 +14,12 @@ namespace cj {
 	JsGen::~JsGen() {
 	}
 
+	Str JsGen::genRemmark(Node *node) {
+		Remmark *rem = (Remmark*)node;
+		if (rem->isMultiLine) return (Str)"/*" + rem->value + "*/\n";
+		else return (Str)"//" + rem->value + "\n";
+	}
+
 	Str JsGen::genNumber(Node *node) {
 		Number *num = (Number*)node;
 		Str s = to_string(num->value);

@@ -52,6 +52,7 @@ namespace cj {
 		virtual bool doMainStatement(Node *parent);
 		virtual bool doStatement(Node *parent);
 
+		virtual bool doRemmark(Node *parent);
 		virtual bool doFunc(Node *parent);
 		virtual bool doFuncCall(Node *parent);
 		virtual bool doFuncDefPassMain(Node *parent, bool isFrom = true);
@@ -103,13 +104,16 @@ namespace cj {
 		virtual bool isNumber();
 		virtual bool isLexeme(Str s);
 		virtual bool isSpecial(Str s);
+		virtual bool isRemmark();
+
 		virtual bool find(Str s);
 
 		virtual bool isCodeInsertion();
 		virtual bool isEof();
 		
 	protected:
-		Str std_type, oper, identifier, cur_string, source;
+		Str std_type, oper, identifier, cur_string, source, remmark;
+		bool isRemmarkMultiLine;
 		Class *clss = nullptr;
 		int number;
 		lang::Token token;

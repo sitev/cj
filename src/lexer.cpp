@@ -49,18 +49,22 @@ namespace cj {
 				pos++;
 				a = a + (char)c;
 				if (c == '/' && isMul) {
+					type = ltRemmark;
 					mode = lmNormal;
-					return a;
+					if (a < 4) return "";
+					return a.substr(2, a.length() - 4);
 				}
 				if (c == '*') isMul = true; else isMul = false;
 			}
 			else if (mode == lmRemmark2) {
 				pos++;
-				a = a + (char)c;
 				if (isCR) {
+					type = ltRemmark2;
 					mode = lmNormal;
-					return a;
+					if (a < 2) return "";
+					return a.substr(2);
 				}
+				a = a + (char)c;
 				if (c == '*') isMul = true; else isMul = false;
 			}
 			else if (mode == lmString) {

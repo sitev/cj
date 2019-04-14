@@ -17,6 +17,7 @@ namespace cj {
 
 		virtual Str getHeader();
 		virtual Str getFooter();
+		virtual Str genRemmark(Node *node);
 		virtual Str genNumber(Node *node);
 		virtual Str genString(Node *node);
 		virtual Str genVarDef(Node *node);
