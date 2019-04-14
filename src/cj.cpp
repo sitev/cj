@@ -29,8 +29,9 @@ int main(int argc, char* argv[])
 
 	Str sb = R"(int JsGen = 1;
 int CppGen = 2;
-int AsGen = 3;
+int CSharpGen = 3;
 int LuaGen = 4;
+int AsGen = 5;
 
 Project {
 	string sources[];
@@ -40,7 +41,6 @@ Project {
 }
 
 )";
-
 
 	Str se = R"(
 )";
@@ -90,7 +90,7 @@ Project {
 		delete ff;
 	}
 	parser->run(s);
-	parser->out(prefix + "syntax_tree.txt");
+	//parser->out(prefix + "syntax_tree.txt");
 
 	int pfn = fn.rfind(".");
 	fn = fn.substr(0, pfn);

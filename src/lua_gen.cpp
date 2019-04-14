@@ -4,54 +4,48 @@ using namespace lang;
 #include "cj.h"
 
 namespace cj {
-	AsGen::AsGen(Parser *parser, Str fn) : Generator(parser, fn) {
-		ext.push_back("as");
+	LuaGen::LuaGen(Parser *parser, Str fn) : Generator(parser, fn) {
+		ext.push_back("lua");
 	}
 
-	AsGen::~AsGen() {
+	LuaGen::~LuaGen() {
 
 	}
 
-	Str AsGen::genNumber(Node *node) { 
+	Str LuaGen::genNumber(Node *node) {
 		Number *num = (Number*)node;
 		Str s = to_string(num->value);
 		return s;
 	}
 
-	Str AsGen::genString(Node *node) {
+	Str LuaGen::genString(Node *node) {
 		StringNode *sn = (StringNode*)node;
 		Str s = sn->value;
 		return s;
 	}
 
-	Str AsGen::genVarDef(Node *node) { 
+	Str LuaGen::genVarDef(Node *node) {
+		Str s = "";
 		VarDef *vd = (VarDef*)node;
-		Str s;
-		if (vd->isArray) {
-			s = "array<";
-			if (vd->clss) s += vd->clss->name + "*> " + getVarName(vd->name);
-			else s += vd->type + "> ";
-		}
-		else {
-			if (vd->clss) s += vd->clss->name + " *";
-			else s = vd->type + " ";
-		}
+		Str tmp = vd->name;
+		if (vd->clss) s = "obj.";
 
 		int size = node->nodes.size();
 		if (size > 0) {
 			Node *nd = node->nodes[0];
 			if (nd->nodeType == ntExpression) {
-				s += genExpression(nd);
+				Str tmp = genExpression(nd);
+				s += tmp;
 				return s;
 			}
 		}
 
-		s += getVarName(vd->name) + ";\r\n";
+		s += getVarName(vd->name) + " = 0;\n";
 		return s;
 	}
 
-	Str AsGen::genVar(Node *node) {
-		//Поиск объекта для переменной (если она вляется полем)
+	Str LuaGen::genVar(Node *node) {
+		//Поиск объекта для переменной (если она является полем)
 		Str obj = findVarNameIfField(node);
 		if (obj != "") obj += ".";
 
@@ -77,10 +71,9 @@ namespace cj {
 		}
 		return s;
 	}
-	Str AsGen::genFuncDef(Node *node) {
+	Str LuaGen::genFuncDef(Node *node) {
 		FuncDef *fd = (FuncDef*)node;
-
-		Str s = "";
+		Str s = "\nfunction ";
 
 		if (fd->isFrom) {
 			s += "#include ";
@@ -94,7 +87,7 @@ namespace cj {
 				s += fd->clss->name + "* ";
 			}
 			else {
-				s += fd->type + " ";
+				//s += fd->type + " ";
 			}
 		}
 		s += fd->name + "(";
@@ -103,7 +96,9 @@ namespace cj {
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
 			if (fdp->clss) s += fdp->clss->name + " *";
-			else s += fdp->type + " ";
+			else {
+				if (fdp->type != "auto") s += fdp->type + " ";
+			}
 			if (fdp->isRef) s += "&";
 			s += fdp->name;
 
@@ -113,6 +108,7 @@ namespace cj {
 		}
 
 		s += ") ";
+		//s += ";\n";
 
 		count = fd->nodes.size();
 		for (int i = 0; i < count; i++) {
@@ -122,7 +118,7 @@ namespace cj {
 
 		return s;
 	}
-	Str AsGen::genFunc(Node *node) {
+	Str LuaGen::genFunc(Node *node) {
 		Func *func = (Func*)node;
 		Str s = func->def->name + "(";
 
@@ -137,18 +133,18 @@ namespace cj {
 		return s;
 	}
 
-	Str AsGen::genOperator(Node *node) { return ""; }
-	Str AsGen::genOperatorIf(Operator *oper) { return ""; }
-	Str AsGen::genOperatorFor(Operator *oper) { return ""; }
-	Str AsGen::genOperatorWhile(Operator *oper) { return ""; }
-	Str AsGen::genOperatorReturn(Operator *oper) { return ""; }
-	Str AsGen::genExpOper(Node *node) {
+	Str LuaGen::genOperator(Node *node) { return ""; }
+	Str LuaGen::genOperatorIf(Operator *oper) { return ""; }
+	Str LuaGen::genOperatorFor(Operator *oper) { return ""; }
+	Str LuaGen::genOperatorWhile(Operator *oper) { return ""; }
+	Str LuaGen::genOperatorReturn(Operator *oper) { return ""; }
+	Str LuaGen::genExpOper(Node *node) {
 		Operator *oper = (Operator*)node;
 		if (oper->name == ".") return "->";
 		Str s = (Str)" " + oper->name + " ";
 		return s;
 	}
-	Str AsGen::genExpression(Node *node, bool isExpNotCR) { 
+	Str LuaGen::genExpression(Node *node, bool isExpNotCR) {
 		Expression *exp = (Expression*)node;
 
 		Str s = "";
@@ -165,8 +161,8 @@ namespace cj {
 
 		return s;
 	}
-	Str AsGen::genCodeBlock(Node *node) { 
-		Str s = "{\n";
+	Str LuaGen::genCodeBlock(Node *node) {
+		Str s = "\n";
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
@@ -175,21 +171,22 @@ namespace cj {
 			if (s2 != "") s += getTab(1, 3) + s2;
 		}
 
-		s += "}\n\n";
+		s += "end\n\n";
 		return s;
 	}
 
-	Str AsGen::genClass(Node *node) {
+	Str LuaGen::genClass(Node *node) {
 		Class *clss = (Class*)node;
-		Str s;
-		s = "class ";
-		s += clss->name;
+		Str s = "";
+		s += (Str)"\n" + clss->name + " = {}\n";
 
 		if (clss->parent != nullptr) {
-			s += (Str)" : " + clss->parent->name;
+			s += (Str)"setmetatable(" + clss->name + ", { __index = " + clss->parent->name + " })\n";
 		}
 
-		s += " {\r\n";
+		s += (Str)"function " + clss->name + ":new()\n";
+		s += "	local obj = {}\n";
+		s += "\n";
 
 		int count = node->nodes.size();
 		for (int i = 0; i < count; i++) {
@@ -199,39 +196,53 @@ namespace cj {
 			s = s + getTab(1, 4) + s2;
 		}
 
-		s += "}\r\n";
+		s += "\n";
+		s += "	setmetatable(obj, self);\n";
+		s += "	self.__index = self;\n";
+		s += "	return obj\n";
+
+		s += "end;\n\n";
 		return s;
 	}
 
-	Str AsGen::genConstruct(Node *node) {
+	Str LuaGen::genConstruct(Node *node) {
 		Construct *con = (Construct*)node;
-		int count = node->nodes.size();
+
+		int count = con->clss->nodes.size();
 		if (count == 0) {
-			Str s = con->clss->name + "();\r\n";
+			Str s = con->clss->name + ":new()";
 			return s;
 		}
-		Str s = "new";
-		s += con->clss->name + "();\r\n";
+		
+		Str s = con->clss->name + ":new();\n";
 		Str var_name = findVarNameIfField(node, true);
-		s += con->clss->name + " new" + con->clss->name + "() {\n\t" + "auto " + var_name + " = " + con->clss->name + "();\n";
 
+		count = con->nodes.size();
 		for (int i = 0; i < count; i++) {
-			Node *nd = node->nodes[i];
-			Str s2 = generate(nd);
-			s = s + getTab(1, 5) + s2;
+			Node *nd = con->nodes[i];
+			s += generate(nd);
 		}
-
-		s += (Str)"\treturn " + var_name + ";\n}\n";
-
 		return s;
 	}
 
-	bool AsGen::isReservedWord(Str s) {
+	Str LuaGen::genCodeInsertion(Node *node) {
+		CodeInsertion *ci = (CodeInsertion*)node;
+		Str s;
+		if (ci->cit == ciLua) {
+			s = "\n-- { code insertion\n";
+			s += ci->source;
+			s += "\n-- } code insertion\n\n";
+		}
+		return s;
+	}
+
+
+	bool LuaGen::isReservedWord(Str s) {
 		if (s == "namespace") return true;
 		return false;
 	}
 
-	Str AsGen::getVarName(Str s) {
+	Str LuaGen::getVarName(Str s) {
 		if (isReservedWord(s)) return (Str)"m_" + s;
 		return s;
 	}

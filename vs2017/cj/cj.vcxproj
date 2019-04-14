@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\src\as_gen.cpp" />
     <ClCompile Include="..\..\src\cj.cpp" />
     <ClCompile Include="..\..\src\cpp_gen.cpp" />
+    <ClCompile Include="..\..\src\csharp_gen.cpp" />
     <ClCompile Include="..\..\src\js_gen.cpp" />
     <ClCompile Include="..\..\src\lexer.cpp" />
     <ClCompile Include="..\..\src\lua_gen.cpp" />
@@ -31,6 +32,7 @@
     <ClInclude Include="..\..\src\as_gen.h" />
     <ClInclude Include="..\..\src\cj.h" />
     <ClInclude Include="..\..\src\cpp_gen.h" />
+    <ClInclude Include="..\..\src\csharp_gen.h" />
     <ClInclude Include="..\..\src\js_gen.h" />
     <ClInclude Include="..\..\src\lexer.h" />
     <ClInclude Include="..\..\src\lua_gen.h" />
