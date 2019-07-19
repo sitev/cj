@@ -25,6 +25,10 @@ namespace cj {
 		this->includes = includes;
 	}
 
+	void CppGen::setLibs(vector<Str> &libs) {
+		this->libs = libs;
+	}
+
 	void CppGen::setNamespace(Str namespce) {
 		this->namespce = namespce;
 		sCpp = "#include \"";
@@ -40,12 +44,19 @@ namespace cj {
 	}
 
 	Str CppGen::getHeader() {
-		Str s = "#pragma once\n\n";
+		Str s = "#pragma once\n";
 
-		int count = includes.size();
+		int count = libs.size();
+		if (count > 0) s += "\n";
+		for (int i = 0; i < count; i++) {
+			s += (Str)"#pragma comment( lib, \"" + libs[i] + "\" )\n";
+		}
+		if (count > 0) s += "\n";
+
+		count = includes.size();
 		for (int i = 0; i < count; i++) {
 			s += "#include ";
-			s += includes[i] + "\n";
+			s += (Str)"\"" + includes[i] + "\"\n";
 		}
 		if (count != 0) s += "\n";
 
@@ -81,11 +92,11 @@ namespace cj {
 		Remmark *rem = (Remmark*)node;
 		Str s = rem->value;
 		if (rem->isMultiLine) {
-			sCpp = (Str)"/*" + s + "*/\n";
+			sCpp += (Str)"/*" + s + "*/\n";
 			s = (Str)"/*" + s + "*/\n";
 		}
 		else {
-			sCpp = (Str)"//" + s + "\n";
+			sCpp += (Str)"//" + s + "\n";
 			s = (Str)"//" + s + "\n";
 		}
 		return s;
@@ -193,9 +204,9 @@ namespace cj {
 		int count = fd->params.size();
 		for (int i = 0; i < count; i++) {
 			FuncDefParam *fdp = (FuncDefParam*)fd->params[i];
-			if (fdp->clss) if (outInHeader) s += fdp->clss->name + " *";
-			else if (outInHeader) s += genType(fdp->type) + " ";
-			if (fdp->isRef) if (outInHeader) s += "&";
+			if (fdp->clss) { if (outInHeader) s += fdp->clss->name + " *"; }
+			else { if (outInHeader) s += genType(fdp->type) + " "; }
+			if (fdp->isRef) { if (outInHeader) s += "&"; }
 			if (outInHeader) s += fdp->name;
 
 			if (fdp->clss) sCpp += fdp->clss->name + " *";

@@ -1,16 +1,6 @@
-#include "core.h"
-using namespace core;
-
-#include "lang.h"
 #include "cj.h"
 using namespace cj;
 
-#include "lua_wrap.h"
-
-#pragma comment( lib, "core.lib" )
-#pragma comment( lib, "lang.lib" )
-#pragma comment (lib, "lua53.lib")
-#pragma comment (lib, "lua_wrap.lib")
 
 int main(int argc, char* argv[])
 {
@@ -36,6 +26,7 @@ int AsGen = 5;
 Project {
 	string sources[];
 	string includes[];
+	string libs[];
 	string namespace;
 	int generator;
 }
@@ -59,7 +50,7 @@ Project {
 	Lua lua;
 	int result = lua.open((fn + ".lua").to_string());
 
-	vector<Str> sources, includes;
+	vector<Str> sources, includes, libs;
 	auto project = lua.get("project");
 	auto srcs = project["sources"];
 	for (int i = 0; i < srcs.length(); i++) {
@@ -71,7 +62,12 @@ Project {
 		string s = incs[i + 1];
 		includes.push_back(s);
 	}
-	
+	auto lbs = project["libs"];
+	for (int i = 0; i < lbs.length(); i++) {
+		string s = lbs[i + 1];
+		libs.push_back(s);
+	}
+
 	Str namespce = project["m_namespace"].cast<string>();
 	GeneratorType genType = (GeneratorType)project["generator"].cast<int>();
 
@@ -101,6 +97,7 @@ Project {
 			generator = new CppGen(parser, fn);
 			((CppGen*)generator)->setIncludes(includes);
 			((CppGen*)generator)->setNamespace(namespce);
+			((CppGen*)generator)->setLibs(libs);
 			break;
 		default:
 			return -1;

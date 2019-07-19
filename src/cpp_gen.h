@@ -7,10 +7,12 @@ namespace cj {
 		CppGen(Parser *parser, Str fn);
 		~CppGen();
 		virtual void setIncludes(vector<Str> &includes);
+		virtual void setLibs(vector<Str> &libs);
 		virtual void setNamespace(Str namespce);
 	protected:
 		Str sCpp;
 		vector<Str> includes;
+		vector<Str> libs;
 		Str namespce;
 		vector<Str> froms;
 		bool wasReturn = false;

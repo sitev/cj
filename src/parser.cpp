@@ -9,8 +9,8 @@ using namespace std;
 namespace cj {
 
 	vector<Str> std_types = {
-		"auto", "void", "bool", "byte", "short", "int", "long", "ubyte", "ushort", "uint", "ulong",
-		"float", "double", "real", "char", "str", "string", "ustring"
+		"var", "void", "bool", "byte", "short", "int", "long", "ubyte", "ushort", "uint", "ulong",
+		"float", "double", "real", "char8", "char", "char32", "string8", "string", "string32"
 	};
 
 	vector<Str> operators = { "if", "for", "while", "return", "from" };
@@ -44,9 +44,6 @@ namespace cj {
 		}
 	}
 
-	/*bool Parser::doCodeBlockPassMain(Node *parent) {
-	}*/
-
 	bool Parser::doRemmark(Node *parent) {
 		Remmark *rem = new Remmark();
 		rem->value = remmark;
@@ -55,7 +52,22 @@ namespace cj {
 		return true;
 	}
 
+	bool Parser::doCodeBlockPassMain(Node *parent) {
+		CodeBlock *cb;
+		if (parent == nullptr) cb = (CodeBlock*)nodes[nodeCount];
+		else cb = (CodeBlock*)parent->nodes[parent->nodeCount];
+
+		addOrTestNode(parent, cb);
+		while (true) {
+			if (isSpecial("}")) return true;
+			if (doStatement(cb)) continue;
+			return false;
+		}
+	}
+
 	bool Parser::doCodeBlock(Node *parent) {
+		if (iPass == ptMain) return doCodeBlockPassMain(parent);
+
 		Node *node = new CodeBlock();
 		addOrTestNode(parent, node);
 		while (true) {
@@ -220,11 +232,35 @@ namespace cj {
 	}
 
 	bool Parser::doFuncDefPassMain(Node *parent, bool isFrom) {
-		return false;
+		FuncDef *fd;
+		if (parent == nullptr) fd = (FuncDef*)nodes[nodeCount];
+		else fd = (FuncDef*)parent->nodes[parent->nodeCount];
+		
+		addOrTestNode(parent, fd);
+		if (!doFuncDefParams(fd)) return false;
+
+		if (fd->owner) {
+			if (((Class*)fd->owner)->isFrom) {
+				return isSpecial(";");
+			}
+		}
+
+		if (isOperator("from")) {
+			fd->isFrom = true;
+			if (!isString()) return false;
+			fd->file = cur_string;
+		}
+		else {
+			if (!doFuncDefBody(fd)) return false;
+		}
+
+		return true;
 	}
 
 	bool Parser::doFuncDef(Node *parent, bool isFrom) {
-		//if (iPass == ptMain) return doFuncDefPassMain(parent, isFrom);
+		if (iPass == ptMain) return doFuncDefPassMain(parent, isFrom);
+
+		if (findFuncDef(parent, identifier)) return false;
 
 		FuncDef *fd = new FuncDef();
 		fd->name = identifier;
@@ -269,6 +305,8 @@ namespace cj {
 	}
 
 	bool Parser::doFuncDefParams(FuncDef *fd) {
+		if (iPass == ptMain) return true;
+
 		if (isSpecial(")")) return true;
 		while (true) {
 			bool isRef = false;
@@ -883,6 +921,10 @@ namespace cj {
 				else {
 					if (!doVar(expression)) return false;
 				}
+			}
+			else if (isSpecial(";")) {
+					expression->isTZ = true;
+					return true;
 			}
 			else return false;
 
